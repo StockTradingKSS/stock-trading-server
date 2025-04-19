@@ -1,1 +1,3 @@
 rootProject.name = 'stock-trading'
+include 'transaction-service'
+include 'common'
