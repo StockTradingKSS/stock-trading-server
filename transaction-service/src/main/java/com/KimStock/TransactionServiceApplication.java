@@ -9,6 +9,8 @@ import org.springframework.context.annotation.Import;
 @Import(EnvConfig.class)
 public class TransactionServiceApplication {
     public static void main(String[] args) {
-        SpringApplication.run(TransactionServiceApplication.class, args);
+        SpringApplication app = new SpringApplication(TransactionServiceApplication.class);
+        app.addInitializers(new EnvConfig.DotenvInitializer());
+        app.run(args);
     }
 }
