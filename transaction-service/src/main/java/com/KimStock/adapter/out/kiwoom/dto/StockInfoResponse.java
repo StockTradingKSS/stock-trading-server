@@ -64,7 +64,7 @@ public record StockInfoResponse(
             return Stock.builder()
                     .code(code)
                     .name(name)
-                    .listCount(listCount)
+                    .listCount(Long.valueOf(listCount))
                     .auditInfo(auditInfo)
                     .regDay(regDay)
                     .state(state)

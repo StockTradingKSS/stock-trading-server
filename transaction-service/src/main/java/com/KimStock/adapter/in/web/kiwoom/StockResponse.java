@@ -8,7 +8,7 @@ import java.util.Objects;
 public record StockResponse(
         String code,
         String name,
-        String listCount,
+        Long listCount,
         String auditInfo,
         String regDay,
         String state,
@@ -23,7 +23,7 @@ public record StockResponse(
     public StockResponse {
         code = Objects.requireNonNullElse(code, "");
         name = Objects.requireNonNullElse(name, "");
-        listCount = Objects.requireNonNullElse(listCount, "");
+        listCount = Objects.requireNonNullElse(listCount, 0L);
         auditInfo = Objects.requireNonNullElse(auditInfo, "");
         regDay = Objects.requireNonNullElse(regDay, "");
         state = Objects.requireNonNullElse(state, "");

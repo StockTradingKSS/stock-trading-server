@@ -12,7 +12,7 @@ import lombok.Getter;
 public class Stock {
     private String code;                           // 종목코드
     private String name;                           // 종목명
-    private String listCount;                      // 상장주식수
+    private Long listCount;                      // 상장주식수
     private String auditInfo;    // 감사정보
     private String regDay;          // 등록일
     private String state;       // 종목 상태
