@@ -3,9 +3,12 @@ package com.KimStock.domain.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Getter;
 
-@AllArgsConstructor(access = lombok.AccessLevel.PRIVATE)
+
 @Builder
+@Getter
+@AllArgsConstructor(access = lombok.AccessLevel.PRIVATE)
 public class Stock {
     private String code;                           // 종목코드
     private String name;                           // 종목명
@@ -20,3 +23,5 @@ public class Stock {
     private String companyClassName; // 기업형태
     private String orderWarning; // 주문 경고
 }
+
+
