@@ -1,11 +1,10 @@
 package com.KimStock.adapter.out.kiwoom.service;
 
-import com.KimStock.adapter.out.kiwoom.dto.MarketCodeRequest;
-import com.KimStock.adapter.out.kiwoom.dto.MarketCodeResponse;
-import com.KimStock.adapter.out.kiwoom.dto.StockInfoRequest;
-import com.KimStock.adapter.out.kiwoom.dto.StockInfoResponse;
+import com.KimStock.adapter.out.kiwoom.dto.*;
+import com.KimStock.application.port.out.LoadAccountBalancePort;
 import com.KimStock.application.port.out.LoadMarketListPort;
 import com.KimStock.application.port.out.LoadStockListPort;
+import com.KimStock.domain.model.AccountBalance;
 import com.KimStock.domain.model.Market;
 import com.KimStock.domain.model.Stock;
 import com.KimStock.domain.model.type.MarketType;
@@ -23,7 +22,7 @@ import java.util.List;
 
 @ExternalSystemAdapter
 @Slf4j
-public class KiwoomApiAdapter implements LoadStockListPort, LoadMarketListPort {
+public class KiwoomApiAdapter implements LoadStockListPort, LoadMarketListPort, LoadAccountBalancePort {
     private final WebClient webClient;
     private final KiwoomAuthAdapter kiwoomAuthAdapter;
 
@@ -133,5 +132,39 @@ public class KiwoomApiAdapter implements LoadStockListPort, LoadMarketListPort {
                     .flatMap(marketCodeResponse -> Mono.just(marketCodeResponse.marketCodeList()));
         }
         return handleErrorResponse(response, "Market code request failed.");
+    }
+
+    @Override
+    public Mono<AccountBalance> loadAccountBalance() {
+        AccountBalanceRequest request = AccountBalanceRequest.getDefaultRequest();
+
+        return kiwoomAuthAdapter.getValidToken()
+                .flatMap(token -> loadAccountBalanceApi(token, request))
+                .onErrorResume(e -> {
+                    log.error("[Load Account Balance Error] : {}", e.getMessage());
+                    return Mono.error(e);
+                });
+    }
+
+    private Mono<AccountBalance> loadAccountBalanceApi(String token, AccountBalanceRequest request) {
+        return webClient.post()
+                .uri("/api/dostk/acnt")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .header("api-id", "kt00018")
+                .header("cont-yn", "N")
+                .header("next-key", "")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(request)
+                .exchangeToMono(this::handleAccountBalanceResponse);
+    }
+
+    private Mono<AccountBalance> handleAccountBalanceResponse(ClientResponse response) {
+        if (response.statusCode().is2xxSuccessful()) {
+            return response.bodyToMono(AccountBalanceResponse.class)
+                    .map(AccountBalanceResponse::mapToAccountBalance)
+                    .doOnSuccess(balance -> log.info("Account balance API call successful {}", balance));
+        }
+
+        return handleErrorResponse(response, "Account balance request failed.");
     }
 }
