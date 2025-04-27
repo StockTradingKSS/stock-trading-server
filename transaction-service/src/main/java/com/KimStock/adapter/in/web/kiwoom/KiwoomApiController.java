@@ -1,7 +1,9 @@
 package com.KimStock.adapter.in.web.kiwoom;
 
+import com.KimStock.application.port.out.LoadAccountBalancePort;
 import com.KimStock.application.port.out.LoadMarketListPort;
 import com.KimStock.application.port.out.LoadStockListPort;
+import com.KimStock.domain.model.AccountBalance;
 import com.KimStock.domain.model.type.MarketType;
 import com.common.WebAdapter;
 import io.swagger.v3.oas.annotations.Operation;
@@ -25,6 +27,7 @@ public class KiwoomApiController {
 
     private final LoadStockListPort loadStockListPort;
     private final LoadMarketListPort loadMarketListPort;
+    private final LoadAccountBalancePort loadAccountBalancePort;
 
     @GetMapping("/stocks")
     @Operation(summary = "종목 정보 리스트 조회", description = "시장 구분에 따른 종목 정보 리스트를 조회합니다.")
@@ -48,5 +51,13 @@ public class KiwoomApiController {
                 .map(marketList -> marketList.stream()
                         .map(MarketResponse::of)
                         .toList());
+    }
+
+    @GetMapping("/account/balance")
+    @Operation(summary = "업종코드 리스트 조회", description = "시장 구분에 따른 업종코드 리스트를 조회합니다.")
+    public Mono<AccountBalanceResponse> getMarketCodeList() {
+
+        return loadAccountBalancePort.loadAccountBalance()
+                .map(AccountBalanceResponse::of);
     }
 }
