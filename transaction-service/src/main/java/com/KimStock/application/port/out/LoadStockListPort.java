@@ -6,6 +6,6 @@ import reactor.core.publisher.Mono;
 
 import java.util.List;
 
-public interface RequestStockListPort {
-    Mono<List<Stock>> getStockListByMarketCode(MarketType marketType);
+public interface LoadStockListPort {
+    Mono<List<Stock>> loadStockInfoListBy(MarketType marketType, String contYn, String nextKey);
 }
