@@ -22,6 +22,7 @@ public class Stock {
     private String upSizeName;  // 규모명
     private String companyClassName; // 기업형태
     private String orderWarning; // 주문 경고
+    private boolean isNxtEnable; // 주문 경고
 }
 
 

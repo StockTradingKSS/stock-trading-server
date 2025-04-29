@@ -74,6 +74,7 @@ public record StockInfoResponse(
                     .upSizeName(upSizeName)
                     .companyClassName(companyClassName)
                     .orderWarning(orderWarning)
+                    .isNxtEnable("Y".equals(nxtEnable))
                     .build();
         }
     }
