@@ -38,6 +38,8 @@ kiwoom:
     app-secret: ${KIWOOM_API_APP_SECRET:}
     base-url: https://api.kiwoom.com
     mock-base-url: https://mockapi.kiwoom.com
+  websocket:
+    url: wss://api.kiwoom.com:10000/api/dostk/websocket
 
 env:
   file:
