@@ -1,0 +1,46 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: transaction-service
+  config:
+    import: optional:file:.env[.properties]
+  datasource:
+    url: ${MYSQL_URL}
+    username: ${MYSQL_USER}
+    password: ${MYSQL_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        show_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+  packages-to-scan: com.KimStock.adapter.in.web
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
+
+kiwoom:
+  api:
+    app-key: ${KIWOOM_API_APP_KEY:}
+    app-secret: ${KIWOOM_API_APP_SECRET:}
+    base-url: https://api.kiwoom.com
+    mock-base-url: https://mockapi.kiwoom.com
+  websocket:
+    url: wss://api.kiwoom.com:10000/api/dostk/websocket
+
+env:
+  file:
+    directory: ./transaction-service/
