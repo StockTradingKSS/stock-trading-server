@@ -1,4 +1,4 @@
-FROM openjdk:17-slim
+FROM openjdk:23-slim
 EXPOSE 8080
 ARG JAR_FILE
 COPY ${JAR_FILE} app.jar
