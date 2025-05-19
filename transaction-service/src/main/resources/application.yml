@@ -45,4 +45,4 @@ env:
 
 logging:
   level:
-    org.springframework.r2dbc: DEBUG
+    org.springframework.r2dbc: ERROR
