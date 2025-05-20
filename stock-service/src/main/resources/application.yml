@@ -41,7 +41,7 @@ kiwoom:
 
 env:
   file:
-    directory: ./transaction-service/
+    directory: ./stock-service/
 
 logging:
   level:

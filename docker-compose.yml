@@ -15,7 +15,7 @@ services:
       - POSTGRES_DB=${POSTGRES_DB:-stocktrading}
     volumes:
       - timescale_data:/var/lib/postgresql/data
-      - ./transaction-service/src/main/resources/sql/init-timescaledb.sql:/docker-entrypoint-initdb.d/init.sql
+#      - ./stock-service/src/main/resources/sql/init-timescaledb.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
       interval: 10s
