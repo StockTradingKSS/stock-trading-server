@@ -56,7 +56,7 @@ public class StockJpaEntity implements Persistable<String> {
     }
 
     // 도메인 변환 메소드
-    public Stock toDomainEntity() {
+    public Stock toDomain() {
         return Stock.builder()
                 .code(this.code)
                 .name(this.name)

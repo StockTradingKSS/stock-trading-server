@@ -9,13 +9,7 @@ import reactor.core.publisher.Flux;
 @Repository
 public interface StockRepository extends ReactiveCrudRepository<StockJpaEntity, String> {
     
-    // 시장 코드별 주식 조회
-    Flux<StockJpaEntity> findByMarketCode(String marketCode);
-    
-    // 시장 이름으로 주식 조회
-    Flux<StockJpaEntity> findByMarketName(String marketName);
-    
-    // 사용자 정의 쿼리 (필요한 경우)
-    @Query("SELECT * FROM stock WHERE up_name = :upName")
-    Flux<StockJpaEntity> findByIndustry(String upName);
+    Flux<StockJpaEntity> findByNameContainingIgnoreCase(String keyword);
+
+    Flux<StockJpaEntity> findByNameEqualsIgnoreCase(String exactName);
 }
