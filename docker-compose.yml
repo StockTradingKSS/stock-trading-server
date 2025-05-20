@@ -1,79 +1,31 @@
-version: '3'
+version: '3.8'
+
 services:
-  mysql:
-    image: mysql:8.0
+  timescaledb:
+    image: timescale/timescaledb:latest-pg16
+    container_name: stock-timescaledb
     networks:
       - stock_trading_network
-    volumes:
-      - ../db/conf.d:/etc/mysql/conf.d
-      - ../db/data:/var/lib/mysql
-      - ../db/initdb.d:/docker-entrypoint-initdb.d
-    env_file: .env
     ports:
-      - "3307:3306"
+      - "${POSTGRES_PORT:-5432}:5432"
     environment:
       - TZ=Asia/Seoul
-      - MYSQL_ROOT_PASSWORD=rootpassword
-      - MYSQL_USER=mysqluser
-      - MYSQL_PASSWORD=mysqlpw
-
-  banking-service:
-    image: choco-pay-banking-service:1.0.0
-    networks:
-      - chocopay_network
-    ports:
-      - "8082:8080"
-    depends_on:
-      - mysql
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/choco_banking?useSSL=false&allowPublicKeyRetrieval=true
-      - SPRING_DATASOURCE_USERNAME=mysqluser
-      - SPRING_DATASOURCE_PASSWORD=mysqlpw
-      - SPRING_DATASOURCE_DRIVER-CLASS-NAME=com.mysql.cj.jdbc.Driver
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=create-drop
-      - SPRING_MVC_CONVERTERS_PREFERRED-JSON-MAPPER=gson
-      - SPRINGDOC_SWAGGER-UI_PATH=/swagger-ui.html
-      - LOGGING_LEVEL_ROOT=INFO
-      - LOGGING_LEVEL_COM.CHOCOPAY.MEMBERSHIP=DEBUG
-
-  membership-service:
-    image: choco-pay-membership-service:1.0.2
-    networks:
-      - chocopay_network
-    ports:
-      - "8081:8080"
-    depends_on:
-      - mysql
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/choco_pay?useSSL=false&allowPublicKeyRetrieval=true
-      - SPRING_DATASOURCE_USERNAME=mysqluser
-      - SPRING_DATASOURCE_PASSWORD=mysqlpw
-      - SPRING_DATASOURCE_DRIVER-CLASS-NAME=com.mysql.cj.jdbc.Driver
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=create-drop
-      - SPRING_MVC_CONVERTERS_PREFERRED-JSON-MAPPER=gson
-      - SPRINGDOC_SWAGGER-UI_PATH=/swagger-ui.html
-      - LOGGING_LEVEL_ROOT=INFO
-      - LOGGING_LEVEL_COM.CHOCOPAY.MEMBERSHIP=DEBUG
-
-  money-service:
-    image: choco-pay-money-service:1.0.0
-    networks:
-      - chocopay_network
-    ports:
-      - "8083:8080"
-    depends_on:
-      - mysql
-    environment:
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/choco_money?useSSL=false&allowPublicKeyRetrieval=true
-      - SPRING_DATASOURCE_USERNAME=mysqluser
-      - SPRING_DATASOURCE_PASSWORD=mysqlpw
-      - SPRING_DATASOURCE_DRIVER-CLASS-NAME=com.mysql.cj.jdbc.Driver
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=create-drop
-      - SPRING_MVC_CONVERTERS_PREFERRED-JSON-MAPPER=gson
-      - SPRINGDOC_SWAGGER-UI_PATH=/swagger-ui.html
-      - LOGGING_LEVEL_ROOT=INFO
-      - LOGGING_LEVEL_COM.CHOCOPAY.MONEY=DEBUG
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_DB=${POSTGRES_DB:-stocktrading}
+    volumes:
+      - timescale_data:/var/lib/postgresql/data
+#      - ./stock-service/src/main/resources/sql/init-timescaledb.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 networks:
-  chocopay_network:
+  stock_trading_network:
     driver: bridge
+
+volumes:
+  timescale_data:
+    driver: local

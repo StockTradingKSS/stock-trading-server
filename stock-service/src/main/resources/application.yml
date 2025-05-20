@@ -6,20 +6,18 @@ spring:
     name: transaction-service
   config:
     import: optional:file:.env[.properties]
-  datasource:
-    url: ${MYSQL_URL}
-    username: ${MYSQL_USER}
-    password: ${MYSQL_PASSWORD}
-    driver-class-name: com.mysql.cj.jdbc.Driver
-
-  jpa:
-    hibernate:
-      ddl-auto: update
-    properties:
-      hibernate:
-        format_sql: true
-        show_sql: true
-        dialect: org.hibernate.dialect.MySQLDialect
+  r2dbc:
+    url: ${R2DBC_URL:r2dbc:postgresql://localhost:5432/stocktrading}
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
+    pool:
+      initial-size: 5
+      max-size: 20
+      max-idle-time: 30m
+      max-acquire-time: 10s
+      max-create-connection-time: 10s
+  liquibase:
+    enabled: false  # R2DBC는 Liquibase를 지원하지 않음
 
 springdoc:
   swagger-ui:
@@ -43,4 +41,8 @@ kiwoom:
 
 env:
   file:
-    directory: ./transaction-service/
+    directory: ./stock-service/
+
+logging:
+  level:
+    org.springframework.r2dbc: ERROR
