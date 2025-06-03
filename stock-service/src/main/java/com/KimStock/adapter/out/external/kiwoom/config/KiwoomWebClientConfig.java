@@ -1,4 +1,4 @@
-package com.KimStock.adapter.out.kiwoom.config;
+package com.KimStock.adapter.out.external.kiwoom.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

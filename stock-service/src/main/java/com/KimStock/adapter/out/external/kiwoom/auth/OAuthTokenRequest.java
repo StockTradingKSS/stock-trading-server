@@ -1,4 +1,4 @@
-package com.KimStock.adapter.out.kiwoom.dto;
+package com.KimStock.adapter.out.external.kiwoom.auth;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;

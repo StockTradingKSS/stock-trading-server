@@ -68,15 +68,6 @@ public record AccountBalanceResponse(
         public HoldingStockResponse {
             code = Objects.requireNonNullElse(code, "");
             name = Objects.requireNonNullElse(name, "");
-            quantity = Objects.requireNonNullElse(quantity, 0);
-            tradeableQuantity = Objects.requireNonNullElse(tradeableQuantity, 0);
-            purchasePrice = Objects.requireNonNullElse(purchasePrice, 0L);
-            avgPrice = Objects.requireNonNullElse(avgPrice, 0);
-            currentPrice = Objects.requireNonNullElse(currentPrice, 0L);
-            evaluationAmount = Objects.requireNonNullElse(evaluationAmount, 0L);
-            profitLoss = Objects.requireNonNullElse(profitLoss, 0L);
-            profitLossRate = Objects.requireNonNullElse(profitLossRate, 0.0);
-            possessionRate = Objects.requireNonNullElse(possessionRate, 0.0);
             creditType = Objects.requireNonNullElse(creditType, "");
             creditTypeName = Objects.requireNonNullElse(creditTypeName, "");
             creditLoanDate = Objects.requireNonNullElse(creditLoanDate, "");

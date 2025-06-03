@@ -1,8 +1,5 @@
-package com.KimStock.adapter.out.kiwoom.service;
+package com.KimStock.adapter.out.external.kiwoom.auth;
 
-import com.KimStock.adapter.out.kiwoom.dto.OAuthTokenRequest;
-import com.KimStock.adapter.out.kiwoom.dto.OAuthTokenResponse;
-import com.KimStock.adapter.out.kiwoom.dto.TokenRevokeRequest;
 import com.common.ExternalSystemAdapter;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
