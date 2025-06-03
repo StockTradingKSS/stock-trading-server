@@ -92,7 +92,7 @@ public class KiwoomStockChartAdapter implements LoadStockChartPort {
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .header("api-id", "ka10080")  // 매수주문 TR코드
                 .header("cont-yn", "Y")
-                .header("next-key", "A005930_AL2025052112450000010000")
+                .header("next-key", "A005930_AL2025043020000000010000")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(request)
                 .exchangeToMono(this::handleMinuteChartResponse);
