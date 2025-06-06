@@ -4,6 +4,7 @@ import com.KimStock.adapter.out.external.error.ClientErrorHandler;
 import com.KimStock.adapter.out.external.kiwoom.auth.KiwoomAuthAdapter;
 import com.KimStock.domain.model.StockCandle;
 import com.KimStock.domain.model.type.CandleInterval;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
@@ -115,7 +116,7 @@ public class KiwoomMinuteChartClient {
             String stk_cd, // 종목 코드
             String tic_scope, //틱범위
             String upd_stkpc_tp, // 수정주가구분
-            LocalDateTime lastDateTime // 가장 최근 날짜 값 (응답에서 포함되지 않음)
+            @JsonIgnore LocalDateTime lastDateTime // 가장 최근 날짜 값 (응답에서 포함되지 않음)
     ) {
         @Builder
         public MinuteStockCandleRequest {
