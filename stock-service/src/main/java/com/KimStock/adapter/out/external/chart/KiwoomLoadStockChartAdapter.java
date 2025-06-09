@@ -21,6 +21,7 @@ public class KiwoomLoadStockChartAdapter implements LoadStockChartPort {
     private final KiwoomDayChartClient kiwoomDayChartClient;
     private final KiwoomWeekChartClient kiwoomWeekChartClient;
     private final KiwoomMonthChartClient kiwoomMonthChartClient;
+    private final KiwoomYearChartClient kiwoomYearChartClient;
 
     /**
      * @param lastDateTime : lastDateTime 의 이전 날짜 데이터 중 최대 300개를 가져옵니다. ( Kiwoom API 특성 )
@@ -41,7 +42,7 @@ public class KiwoomLoadStockChartAdapter implements LoadStockChartPort {
                 return kiwoomMonthChartClient.loadMonthCandles(KiwoomMonthChartClient.MonthStockCandleRequest.of(stockCode, true, lastDateTime));
             }
             case YEAR -> {
-                throw new IllegalArgumentException("Invalid candle interval : " + candleInterval);
+                return kiwoomYearChartClient.loadYearCandles(KiwoomYearChartClient.YearStockCandleRequest.of(stockCode, true, lastDateTime));
             }
             default -> {
                 throw new IllegalArgumentException("Invalid candle interval : " + candleInterval);
