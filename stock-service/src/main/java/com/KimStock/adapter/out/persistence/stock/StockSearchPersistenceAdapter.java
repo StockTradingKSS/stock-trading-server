@@ -1,6 +1,5 @@
-package com.KimStock.adapter.out.persistence;
+package com.KimStock.adapter.out.persistence.stock;
 
-import com.KimStock.adapter.out.persistence.entity.StockJpaEntity;
 import com.KimStock.application.port.out.SearchStockPort;
 import com.KimStock.domain.model.Stock;
 import com.common.PersistenceAdapter;
@@ -18,12 +17,12 @@ public class StockSearchPersistenceAdapter implements SearchStockPort {
     @Override
     public Flux<Stock> findByNameContaining(String keyword) {
         return stockRepository.findByNameContainingIgnoreCase(keyword)
-                        .map(StockJpaEntity::toDomain);
+                        .map(StockEntity::toDomain);
     }
     
     @Override
     public Flux<Stock> findByExactName(String exactName) {
         return stockRepository.findByNameEqualsIgnoreCase(exactName)
-                .map(StockJpaEntity::toDomain);
+                .map(StockEntity::toDomain);
     }
 }

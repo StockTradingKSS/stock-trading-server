@@ -1,4 +1,4 @@
-package com.KimStock.adapter.out.persistence;
+package com.KimStock.adapter.out.persistence.stock;
 
 import com.KimStock.application.port.out.SaveStockListPort;
 import com.KimStock.domain.model.Stock;

@@ -1,4 +1,4 @@
-package com.KimStock.adapter.out.persistence.entity;
+package com.KimStock.adapter.out.persistence.stock;
 
 import com.KimStock.domain.model.Stock;
 import lombok.AllArgsConstructor;
@@ -15,7 +15,7 @@ import org.springframework.data.relational.core.mapping.Table;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "stock")
-public class StockJpaEntity implements Persistable<String> {
+public class StockEntity implements Persistable<String> {
 
     @Id
     private String code;
@@ -37,8 +37,8 @@ public class StockJpaEntity implements Persistable<String> {
     private boolean newEntity = true;
 
     // 정적 팩토리 메소드
-    public static StockJpaEntity of(Stock stock) {
-        return StockJpaEntity.builder()
+    public static StockEntity of(Stock stock) {
+        return StockEntity.builder()
                 .code(stock.getCode())
                 .name(stock.getName())
                 .listCount(stock.getListCount())
