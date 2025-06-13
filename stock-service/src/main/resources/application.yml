@@ -16,6 +16,13 @@ spring:
       max-idle-time: 30m
       max-acquire-time: 10s
       max-create-connection-time: 10s
+  sql:
+    init:
+      mode: always
+      schema-locations: 
+        - classpath:drop-foreign-keys.sql
+        - classpath:schema.sql
+      continue-on-error: true
   liquibase:
     enabled: false  # R2DBC는 Liquibase를 지원하지 않음
 
@@ -46,3 +53,4 @@ env:
 logging:
   level:
     org.springframework.r2dbc: ERROR
+    org.springframework.sql.init: DEBUG

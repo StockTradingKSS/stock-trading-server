@@ -28,36 +28,14 @@ public class StockPersistenceAdapter implements SaveStockListPort {
         Set<String> uniqueCodes = new HashSet<>();
         List<Stock> uniqueStockList = new ArrayList<>();
 
-        for (Stock stock : stockList) {
-            // 코드 길이 제한 확인 (20자 초과시 잘라내기)
+        // 중복 제거
+        stockList.forEach(stock -> {
             String code = stock.getCode();
-            if (code.length() > 20) {
-                code = code.substring(0, 20);
-                log.warn("Stock code truncated: {} -> {}", stock.getCode(), code);
-                // 코드가 수정된 새 Stock 객체 생성
-                stock = Stock.builder()
-                        .code(code)
-                        .name(stock.getName())
-                        .listCount(stock.getListCount())
-                        .auditInfo(stock.getAuditInfo())
-                        .regDay(stock.getRegDay())
-                        .state(stock.getState())
-                        .marketCode(stock.getMarketCode())
-                        .marketName(stock.getMarketName())
-                        .upName(stock.getUpName())
-                        .upSizeName(stock.getUpSizeName())
-                        .companyClassName(stock.getCompanyClassName())
-                        .orderWarning(stock.getOrderWarning())
-                        .isNxtEnable(stock.isNxtEnable())
-                        .build();
-            }
-
-            // 중복 제거
             if (!uniqueCodes.contains(code)) {
                 uniqueCodes.add(code);
                 uniqueStockList.add(stock);
             }
-        }
+        });
 
         // 테이블 비우기
         template.getDatabaseClient().sql("TRUNCATE TABLE stock")
