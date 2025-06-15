@@ -22,6 +22,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import static com.KimStock.adapter.out.external.chart.StockCodeParser.getOriginalStockCode;
+
 @Component
 @Slf4j
 public class KiwoomMinuteChartClient {
@@ -50,9 +52,9 @@ public class KiwoomMinuteChartClient {
 
                     log.info("차트 조회 성공");
                     List<MinuteStockCandleResponse.ChartItem> chartItemList = response.chartItems();
-                    List<StockCandle> stockCandleList = chartItemList.stream()
-                            .map(chartItem -> chartItem.mapToStockCandle(request.stk_cd(), CandleInterval.MINUTE))
-                            .toList();
+                    List<StockCandle> stockCandleList = new ArrayList<>(chartItemList.stream()
+                            .map(chartItem -> chartItem.mapToStockCandle(getOriginalStockCode(request.stk_cd()), CandleInterval.MINUTE))
+                            .toList());
 
                     LocalDateTime lastDateTime = request.lastDateTime();
                     if (stockCandleList.isEmpty() || lastDateTime == null) {
@@ -65,9 +67,7 @@ public class KiwoomMinuteChartClient {
                         stockCandleList.removeFirst();
                     }
 
-                    return Mono.just(
-                            stockCandleList
-                    );
+                    return Mono.just(stockCandleList);
                 })
                 .onErrorResume(e -> {
                     log.error("[Load Minute Candle Error] : {}", e.getMessage());

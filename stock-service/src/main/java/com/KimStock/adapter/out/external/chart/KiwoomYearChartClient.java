@@ -22,6 +22,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import static com.KimStock.adapter.out.external.chart.StockCodeParser.getOriginalStockCode;
+
 @Component
 @Slf4j
 public class KiwoomYearChartClient {
@@ -54,9 +56,22 @@ public class KiwoomYearChartClient {
 
                     log.info("차트 조회 성공");
                     List<YearStockCandleResponse.YearCandleItem> YearCandleItemList = response.YearCandleItems();
-                    List<StockCandle> stockCandleList = YearCandleItemList.stream()
-                            .map(YearCandleItem -> YearCandleItem.mapToStockCandle(request.stk_cd()))
-                            .toList();
+                    List<StockCandle> stockCandleList = new ArrayList<>(YearCandleItemList.stream()
+                            .map(YearCandleItem -> YearCandleItem.mapToStockCandle(getOriginalStockCode(request.stk_cd())))
+                            .toList());
+
+
+                    String baseDateTimeStr = request.base_dt();
+                    if (stockCandleList.isEmpty() || baseDateTimeStr == null) {
+                        return Mono.just(stockCandleList);
+                    }
+
+                    // 최근 날짜 값을 포함한다면 삭제해 준다.
+                    LocalDateTime openDateTime = stockCandleList.getFirst().getOpenTime();
+                    boolean hasBaseDateTime = openDateTime.format(yyyyMMdd).equals(baseDateTimeStr);
+                    if (hasBaseDateTime) {
+                        stockCandleList.removeFirst();
+                    }
 
                     return Mono.just(
                             stockCandleList

@@ -17,10 +17,13 @@ import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
+import static com.KimStock.adapter.out.external.chart.StockCodeParser.getOriginalStockCode;
 
 @Component
 @Slf4j
@@ -54,9 +57,21 @@ public class KiwoomDayChartClient {
 
                     log.info("차트 조회 성공");
                     List<DayStockCandleResponse.DayCandleItem> dayCandleItemList = response.dayCandleItems();
-                    List<StockCandle> stockCandleList = dayCandleItemList.stream()
-                            .map(dayCandleItem -> dayCandleItem.mapToStockCandle(request.stk_cd()))
-                            .toList();
+                    List<StockCandle> stockCandleList = new ArrayList<>(dayCandleItemList.stream()
+                            .map(dayCandleItem -> dayCandleItem.mapToStockCandle(getOriginalStockCode(request.stk_cd())))
+                            .toList());
+
+                    String baseDateTimeStr = request.base_dt();
+                    if (stockCandleList.isEmpty() || baseDateTimeStr == null) {
+                        return Mono.just(stockCandleList);
+                    }
+
+                    // 최근 날짜 값을 포함한다면 삭제해 준다.
+                    LocalDateTime openDateTime = stockCandleList.getFirst().getOpenTime();
+                    boolean hasBaseDateTime = openDateTime.format(yyyyMMdd).equals(baseDateTimeStr);
+                    if (hasBaseDateTime) {
+                        stockCandleList.removeFirst();
+                    }
 
                     return Mono.just(
                             stockCandleList
@@ -112,6 +127,9 @@ public class KiwoomDayChartClient {
         }
 
         public static DayStockCandleRequest of(String stockCode, boolean isUpdatedPrice, LocalDateTime lastDateTime) {
+            if(lastDateTime == null){
+                lastDateTime = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
+            }
             return DayStockCandleRequest.builder()
                     .stk_cd(stockCode + "_AL")
                     .upd_stkpc_tp(String.valueOf(isUpdatedPrice ? 1 : 0))
