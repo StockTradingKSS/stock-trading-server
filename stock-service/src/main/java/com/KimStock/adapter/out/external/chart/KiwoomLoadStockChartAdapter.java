@@ -24,7 +24,7 @@ public class KiwoomLoadStockChartAdapter implements LoadStockChartPort {
     private final KiwoomYearChartClient kiwoomYearChartClient;
 
     /**
-     * @param lastDateTime : lastDateTime 의 이전 날짜 데이터 중 최대 300개를 가져옵니다. ( Kiwoom API 특성 )
+     * @param lastDateTime : lastDateTime 의 이전 날짜 데이터를 가져옵니다.
      */
     @Override
     public Mono<List<StockCandle>> loadStockCandleListBy(String stockCode, CandleInterval candleInterval, LocalDateTime lastDateTime) {
