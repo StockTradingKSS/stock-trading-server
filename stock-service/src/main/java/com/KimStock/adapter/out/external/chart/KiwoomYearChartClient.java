@@ -17,6 +17,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -127,10 +128,13 @@ public class KiwoomYearChartClient {
         }
 
         public static YearStockCandleRequest of(String stockCode, boolean isUpdatedPrice, LocalDateTime lastDateTime) {
+            if(lastDateTime == null) {
+                lastDateTime = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
+            }
             return YearStockCandleRequest.builder()
                     .stk_cd(stockCode + "_AL")
                     .upd_stkpc_tp(String.valueOf(isUpdatedPrice ? 1 : 0))
-                    .base_dt(lastDateTime.format(yyyyMMdd))
+                    .base_dt(lastDateTime != null ? lastDateTime.format(yyyyMMdd) : null)
                     .build();
         }
     }

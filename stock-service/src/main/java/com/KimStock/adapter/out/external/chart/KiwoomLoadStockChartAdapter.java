@@ -11,43 +11,27 @@ import reactor.core.publisher.Mono;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static com.KimStock.adapter.out.external.chart.KiwoomMinuteChartClient.MinuteStockCandleRequest;
-
-@ExternalSystemAdapter
+//@ExternalSystemAdapter
 @RequiredArgsConstructor
 @Slf4j
 public class KiwoomLoadStockChartAdapter implements LoadStockChartPort {
-    private final KiwoomMinuteChartClient kiwoomMinuteChartClient;
-    private final KiwoomDayChartClient kiwoomDayChartClient;
-    private final KiwoomWeekChartClient kiwoomWeekChartClient;
-    private final KiwoomMonthChartClient kiwoomMonthChartClient;
-    private final KiwoomYearChartClient kiwoomYearChartClient;
+    
+    // Toss API로 전환
+    private final TossInvestChartClient tossInvestChartClient;
 
     /**
      * @param lastDateTime : lastDateTime 의 이전 날짜 데이터를 가져옵니다.
      */
     @Override
     public Mono<List<StockCandle>> loadStockCandleListBy(String stockCode, CandleInterval candleInterval, LocalDateTime lastDateTime) {
-        switch (candleInterval) {
-            case MINUTE -> {
-                return kiwoomMinuteChartClient.loadMinuteCandles(MinuteStockCandleRequest.of(stockCode, 1, true, lastDateTime));
-            }
-            case DAY -> {
-                return kiwoomDayChartClient.loadDayCandles(KiwoomDayChartClient.DayStockCandleRequest.of(stockCode, true, lastDateTime));
-            }
-            case WEEK -> {
-                return kiwoomWeekChartClient.loadWeekCandles(KiwoomWeekChartClient.WeekStockCandleRequest.of(stockCode, true, lastDateTime));
-            }
-            case MONTH -> {
-                return kiwoomMonthChartClient.loadMonthCandles(KiwoomMonthChartClient.MonthStockCandleRequest.of(stockCode, true, lastDateTime));
-            }
-            case YEAR -> {
-                return kiwoomYearChartClient.loadYearCandles(KiwoomYearChartClient.YearStockCandleRequest.of(stockCode, true, lastDateTime));
-            }
-            default -> {
-                throw new IllegalArgumentException("Invalid candle interval : " + candleInterval);
-            }
-        }
-//        return Mono.empty();
+        String cleanStockCode = stockCode.trim();
+        log.info("Loading {} candles for stock code: [{}] from: {} using Toss API", candleInterval, cleanStockCode, lastDateTime);
+        
+        // Toss API로 데이터 로드, lastDateTime을 from 파라미터로 사용
+        return tossInvestChartClient.loadCandles(cleanStockCode, candleInterval, 300, lastDateTime)
+                .onErrorResume(error -> {
+                    log.error("Failed to load chart data for stock {}: {}", cleanStockCode, error.getMessage());
+                    return Mono.just(List.of());
+                });
     }
 }
