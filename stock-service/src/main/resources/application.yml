@@ -6,29 +6,40 @@ spring:
     name: transaction-service
   config:
     import: optional:file:.env[.properties]
-  datasource:
-    url: ${JDBC_URL:jdbc:postgresql://localhost:5432/stocktrading}
-    username: ${POSTGRES_USER:postgres}
-    password: ${POSTGRES_PASSWORD:postgres}
-    driver-class-name: org.postgresql.Driver
+  # JPA 설정 (Aurora DSQL용)
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none # DDL 비활성화로 연결 테스트
     show-sql: false
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+        dialect: software.amazon.dsql.hibernate.dialect.AuroraDSQLDialect
         format_sql: true
+        jdbc:
+          batch_size: 25
+        order_inserts: true
+        order_updates: true
+    database-platform: software.amazon.dsql.hibernate.dialect.AuroraDSQLDialect
+    open-in-view: false
   sql:
     init:
       mode: never
   liquibase:
     enabled: false
 
+# AWS DSQL 설정
+aws:
+  access-key-id: ${AWS_ACCESS_KEY_ID:YOUR_ACCESS_KEY}
+  secret-access-key: ${AWS_SECRET_ACCESS_KEY:YOUR_SECRET_KEY}
+  dsql:
+    endpoint: ${DSQL_ENDPOINT:3iabuhgpuyweeglhfr73mskaoq.dsql.ap-northeast-2.on.aws}
+    user: ${DSQL_USER:admin}
+    database: ${DSQL_DATABASE:postgres}
+    region: ${DSQL_REGION:ap-northeast-2}
+
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
-    tags-sorter: alpha
     operations-sorter: alpha
   api-docs:
     path: /v3/api-docs
@@ -51,5 +62,8 @@ env:
 
 logging:
   level:
+    com.KimStock.adapter.out.persistence.config: DEBUG
+    com.zaxxer.hikari: DEBUG
     org.springframework.sql.init: DEBUG
     org.hibernate.SQL: ERROR
+    org.postgresql: DEBUG
