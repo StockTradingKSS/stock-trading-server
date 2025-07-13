@@ -6,40 +6,28 @@ spring:
     name: transaction-service
   config:
     import: optional:file:.env[.properties]
-  # JPA 설정 (Aurora DSQL용)
+  
+  # DSQL 사용을 위한 JPA 설정
+  datasource:
+    url: # DSQL DataSource를 직접 사용하므로 비워둠
+    driver-class-name: org.postgresql.Driver
+  
   jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: none # DDL 비활성화로 연결 테스트
-    show-sql: false
+      ddl-auto: update
     properties:
       hibernate:
-        dialect: software.amazon.dsql.hibernate.dialect.AuroraDSQLDialect
-        format_sql: true
-        jdbc:
-          batch_size: 25
-        order_inserts: true
-        order_updates: true
-    database-platform: software.amazon.dsql.hibernate.dialect.AuroraDSQLDialect
-    open-in-view: false
-  sql:
-    init:
-      mode: never
+        default_schema: stock_trading
+    show-sql: true
+  
   liquibase:
     enabled: false
-
-# AWS DSQL 설정
-aws:
-  access-key-id: ${AWS_ACCESS_KEY_ID:YOUR_ACCESS_KEY}
-  secret-access-key: ${AWS_SECRET_ACCESS_KEY:YOUR_SECRET_KEY}
-  dsql:
-    endpoint: ${DSQL_ENDPOINT:3iabuhgpuyweeglhfr73mskaoq.dsql.ap-northeast-2.on.aws}
-    user: ${DSQL_USER:admin}
-    database: ${DSQL_DATABASE:postgres}
-    region: ${DSQL_REGION:ap-northeast-2}
 
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
+    tags-sorter: alpha
     operations-sorter: alpha
   api-docs:
     path: /v3/api-docs
@@ -56,14 +44,22 @@ kiwoom:
   websocket:
     url: wss://api.kiwoom.com:10000/api/dostk/websocket
 
+# DSQL 설정
+app:
+  datasource:
+    dsql:
+      endpoint: ${DSQL_ENDPOINT:3iabuhgpuyweeglhfr73mskaoq.dsql.ap-northeast-2.on.aws}
+      user: ${DSQL_USER:admin}
+      database: ${DSQL_DATABASE:postgres}
+      region: ${DSQL_REGION:ap-northeast-2}
+
 env:
   file:
     directory: ./stock-service/
 
 logging:
   level:
-    com.KimStock.adapter.out.persistence.config: DEBUG
-    com.zaxxer.hikari: DEBUG
+    org.springframework.r2dbc: ERROR
     org.springframework.sql.init: DEBUG
-    org.hibernate.SQL: ERROR
-    org.postgresql: DEBUG
+    com.KimStock.config.DsqlConfig: DEBUG
+    com.KimStock.application.service.DsqlTestService: DEBUG

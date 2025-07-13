@@ -10,7 +10,7 @@ version = '0.0.1-SNAPSHOT'
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(23)
+        languageVersion = JavaLanguageVersion.of(21)  // Java 21로 변경
     }
 }
 
@@ -33,17 +33,23 @@ dependencies {
     // common 모듈 의존성 추가 - EnvConfig 포함
     implementation project(':common')
 
+    // WebFlux + JDBC 혼합 방식 (Virtual Threads 사용)
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'  // WebFlux 유지
     implementation 'org.springframework.boot:spring-boot-starter-validation'
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'org.springframework.boot:spring-boot-starter-webflux'
-
+    
     // PostgreSQL JDBC driver
     implementation 'org.postgresql:postgresql:42.7.3'
-
-    // Swagger (SpringDoc OpenAPI)
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0'
-
+    
+    // DSQL 관련 의존성
+    implementation 'software.amazon.awssdk:dsql:2.31.32'
+    
+    // Connection pool
+    implementation 'com.zaxxer:HikariCP:5.1.0'
+    
+    // Swagger (SpringDoc OpenAPI) - WebFlux용
+    implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui:2.5.0'
+    
     // WebSocket & JSON
     implementation 'org.java-websocket:Java-WebSocket:1.5.7'
     implementation 'com.google.code.gson:gson:2.11.0'
@@ -52,12 +58,13 @@ dependencies {
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'io.projectreactor:reactor-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 docker {
     println(tasks.bootJar.outputs.files)
-    name rootProject.name + '-' + project.name + ':' + version
+    name rootProject.name +'-'+ project.name +':'+version
     dockerfile file('../Dockerfile')
     files tasks.bootJar.outputs.files
     buildArgs(['JAR_FILE': tasks.bootJar.outputs.files.singleFile.name])
