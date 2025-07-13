@@ -1,43 +1,65 @@
 package com.KimStock.adapter.out.persistence.stock;
 
 import com.KimStock.domain.model.Stock;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.Transient;
-import org.springframework.data.domain.Persistable;
-import org.springframework.data.relational.core.mapping.Table;
 
-@Data
+@Entity
+@Table(name = "stock", indexes = {
+        @Index(name = "idx_stock_market_code", columnList = "market_code"),
+        @Index(name = "idx_stock_name", columnList = "name")
+})
+@Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "stock")
-public class StockEntity implements Persistable<String> {
+public class StockEntity {
 
     @Id
+    @Column(name = "code", length = 20)
     private String code;
 
+    @Column(name = "name", length = 100, nullable = false)
     private String name;
+
+    @Column(name = "list_count")
     private Long listCount;
+
+    @Column(name = "audit_info")
     private String auditInfo;
+
+    @Column(name = "reg_day", length = 20)
     private String regDay;
+
+    @Column(name = "state", length = 20)
     private String state;
+
+    @Column(name = "market_code", length = 20)
     private String marketCode;
+
+    @Column(name = "market_name", length = 50)
     private String marketName;
+
+    @Column(name = "up_name", length = 50)
     private String upName;
+
+    @Column(name = "up_size_name", length = 50)
     private String upSizeName;
+
+    @Column(name = "company_class_name", length = 50)
     private String companyClassName;
+
+    @Column(name = "order_warning", length = 50)
     private String orderWarning;
+
+    @Column(name = "nxt_enable")
     private boolean nxtEnable;
 
-    @Transient
-    private boolean newEntity = true;
-
     // 정적 팩토리 메소드
-    public static StockEntity of(Stock stock) {
+    public static StockEntity from(Stock stock) {
         return StockEntity.builder()
                 .code(stock.getCode())
                 .name(stock.getName())
@@ -70,22 +92,7 @@ public class StockEntity implements Persistable<String> {
                 .upSizeName(this.upSizeName)
                 .companyClassName(this.companyClassName)
                 .orderWarning(this.orderWarning)
-                .isNxtEnable(this.nxtEnable)
+                .nxtEnable(this.nxtEnable)
                 .build();
-    }
-
-    @Override
-    public String getId() {
-        return code;
-    }
-
-    @Override
-    public boolean isNew() {
-        return newEntity;
-    }
-
-    // 엔티티가 저장된 후 호출되어 새 엔티티가 아님을 표시
-    public void setAsExisting() {
-        this.newEntity = false;
     }
 }

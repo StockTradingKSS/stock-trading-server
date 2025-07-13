@@ -86,7 +86,7 @@ public class KiwoomLoadStockListAdapter implements LoadStockListPort {
      * 종목 정보 요청 DTO
      */
     private record StockInfoRequest(
-        String mrkt_tp     // 시장구분(0:전체, 1:코스피, 2:코스닥)
+            String mrkt_tp     // 시장구분(0:전체, 1:코스피, 2:코스닥)
     ) {
         @Builder
         public StockInfoRequest {
@@ -97,7 +97,7 @@ public class KiwoomLoadStockListAdapter implements LoadStockListPort {
             // 0:코스피,10:코스닥,3:ELW,8:ETF,30:K-OTC,50:코넥스,5:신주인수권,4:뮤추얼펀드,6:리츠,9:하이일드
             String mrkt_tp = "0";
 
-            switch (marketType){
+            switch (marketType) {
                 case KOSPI -> mrkt_tp = "0";
                 case KOSDAQ -> mrkt_tp = "10";
                 case null, default -> throw new IllegalArgumentException("marketType is null");
@@ -113,9 +113,9 @@ public class KiwoomLoadStockListAdapter implements LoadStockListPort {
      * 종목 정보 응답 DTO
      */
     private record StockInfoResponse(
-        @JsonProperty("return_msg") String returnMsg,
-        @JsonProperty("return_code") Integer returnCode,
-        @JsonProperty("list") List<StockItem> stockItems
+            @JsonProperty("return_msg") String returnMsg,
+            @JsonProperty("return_code") Integer returnCode,
+            @JsonProperty("list") List<StockItem> stockItems
     ) {
         @Builder
         public StockInfoResponse {
@@ -128,20 +128,20 @@ public class KiwoomLoadStockListAdapter implements LoadStockListPort {
          * 종목 정보 아이템
          */
         private record StockItem(
-            String code,                           // 종목코드
-            String name,                           // 종목명
-            @JsonProperty("listCount") String listCount,    // 상장주식수
-            @JsonProperty("auditInfo") String auditInfo,    // 감사정보
-            @JsonProperty("regDay") String regDay,          // 등록일
-            @JsonProperty("lastPrice") String lastPrice,    // 현재가
-            String state,                          // 종목 상태
-            @JsonProperty("marketCode") String marketCode,  // 시장코드
-            @JsonProperty("marketName") String marketName,  // 시장명
-            @JsonProperty("upName") String upName,          // 업종명
-            @JsonProperty("upSizeName") String upSizeName,  // 규모명
-            @JsonProperty("companyClassName") String companyClassName, // 기업형태
-            @JsonProperty("orderWarning") String orderWarning,        // 주문경고
-            @JsonProperty("nxtEnable") String nxtEnable              // 다음페이지유무
+                String code,                           // 종목코드
+                String name,                           // 종목명
+                @JsonProperty("listCount") String listCount,    // 상장주식수
+                @JsonProperty("auditInfo") String auditInfo,    // 감사정보
+                @JsonProperty("regDay") String regDay,          // 등록일
+                @JsonProperty("lastPrice") String lastPrice,    // 현재가
+                String state,                          // 종목 상태
+                @JsonProperty("marketCode") String marketCode,  // 시장코드
+                @JsonProperty("marketName") String marketName,  // 시장명
+                @JsonProperty("upName") String upName,          // 업종명
+                @JsonProperty("upSizeName") String upSizeName,  // 규모명
+                @JsonProperty("companyClassName") String companyClassName, // 기업형태
+                @JsonProperty("orderWarning") String orderWarning,        // 주문경고
+                @JsonProperty("nxtEnable") String nxtEnable              // 다음페이지유무
         ) {
             @Builder
             public StockItem {
@@ -161,7 +161,7 @@ public class KiwoomLoadStockListAdapter implements LoadStockListPort {
                 nxtEnable = Objects.requireNonNullElse(nxtEnable, "");
             }
 
-            public Stock mapToStock(){
+            public Stock mapToStock() {
                 return Stock.builder()
                         .code(code)
                         .name(name)
@@ -175,7 +175,7 @@ public class KiwoomLoadStockListAdapter implements LoadStockListPort {
                         .upSizeName(upSizeName)
                         .companyClassName(companyClassName)
                         .orderWarning(orderWarning)
-                        .isNxtEnable("Y".equals(nxtEnable))
+                        .nxtEnable("Y".equals(nxtEnable))
                         .build();
             }
         }

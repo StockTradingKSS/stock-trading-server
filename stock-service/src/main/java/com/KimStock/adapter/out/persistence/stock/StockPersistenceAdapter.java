@@ -5,9 +5,7 @@ import com.KimStock.domain.model.Stock;
 import com.common.PersistenceAdapter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -18,9 +16,10 @@ import java.util.Set;
 @RequiredArgsConstructor
 @Slf4j
 public class StockPersistenceAdapter implements SaveStockListPort {
-    private final R2dbcEntityTemplate template;
+    private final StockRepository stockRepository;
 
     @Override
+    @Transactional
     public void saveStockList(List<Stock> stockList) {
         log.info("Saving {} stocks to database", stockList.size());
 
@@ -28,7 +27,6 @@ public class StockPersistenceAdapter implements SaveStockListPort {
         Set<String> uniqueCodes = new HashSet<>();
         List<Stock> uniqueStockList = new ArrayList<>();
 
-        // 중복 제거
         stockList.forEach(stock -> {
             String code = stock.getCode();
             if (!uniqueCodes.contains(code)) {
@@ -37,66 +35,29 @@ public class StockPersistenceAdapter implements SaveStockListPort {
             }
         });
 
-        // 테이블 비우기
-        template.getDatabaseClient().sql("TRUNCATE TABLE stock")
-                .fetch()
-                .rowsUpdated()
-                .doOnNext(count -> log.info("Truncated stock table"))
-                .then(processStockListInChunks(uniqueStockList))
-                .subscribe(
-                        total -> log.info("Successfully saved {} unique stocks", total),
-                        error -> log.error("Error saving stocks: {}", error.getMessage())
-                );
-    }
+        try {
+            // 기존 데이터 삭제
+            stockRepository.deleteAll();
+            log.info("Deleted all existing stocks");
 
-    private Mono<Integer> processStockListInChunks(List<Stock> stockList) {
-        // 더 작은 청크 크기 사용 (PostgreSQL 파라미터 제한)
-        int chunkSize = 10;
-        List<List<Stock>> chunks = new ArrayList<>();
+            // Stock → StockEntity 변환 후 저장
+            List<StockEntity> stockEntities = uniqueStockList.stream()
+                    .map(StockEntity::from)
+                    .toList();
 
-        for (int i = 0; i < stockList.size(); i += chunkSize) {
-            chunks.add(stockList.subList(i, Math.min(i + chunkSize, stockList.size())));
+            // 새 데이터 저장 (배치로 처리)
+            int batchSize = 1000;
+            for (int i = 0; i < stockEntities.size(); i += batchSize) {
+                int endIndex = Math.min(i + batchSize, stockEntities.size());
+                List<StockEntity> batch = stockEntities.subList(i, endIndex);
+                stockRepository.saveAll(batch);
+                log.debug("Saved batch {}-{}", i + 1, endIndex);
+            }
+
+            log.info("Successfully saved {} unique stocks", uniqueStockList.size());
+        } catch (Exception e) {
+            log.error("Error saving stocks: {}", e.getMessage(), e);
+            throw e;
         }
-
-        return Flux.fromIterable(chunks)
-                .flatMap(this::saveStockChunk)
-                .reduce(0, Integer::sum);
-    }
-
-    private Mono<Integer> saveStockChunk(List<Stock> chunk) {
-        if (chunk.isEmpty()) {
-            return Mono.just(0);
-        }
-
-        // 개별 INSERT 문 사용 - UPSERT는 사용하지 않음 (테이블을 이미 비웠기 때문)
-        return Flux.fromIterable(chunk)
-                .flatMap(stock -> {
-                    String sql = "INSERT INTO stock (code, name, list_count, audit_info, " +
-                            "reg_day, state, market_code, market_name, up_name, up_size_name, " +
-                            "company_class_name, order_warning, nxt_enable) " +
-                            "VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)";
-
-                    return template.getDatabaseClient().sql(sql)
-                            .bind("$1", stock.getCode())
-                            .bind("$2", stock.getName())
-                            .bind("$3", stock.getListCount())
-                            .bind("$4", stock.getAuditInfo())
-                            .bind("$5", stock.getRegDay())
-                            .bind("$6", stock.getState())
-                            .bind("$7", stock.getMarketCode())
-                            .bind("$8", stock.getMarketName())
-                            .bind("$9", stock.getUpName())
-                            .bind("$10", stock.getUpSizeName())
-                            .bind("$11", stock.getCompanyClassName())
-                            .bind("$12", stock.getOrderWarning())
-                            .bind("$13", stock.isNxtEnable())
-                            .fetch()
-                            .rowsUpdated()
-                            .onErrorResume(e -> {
-                                log.error("Error inserting stock {}: {}", stock.getCode(), e.getMessage());
-                                return Mono.just(0L);
-                            });
-                })
-                .reduce(0, (total, count) -> total + count.intValue());
     }
 }

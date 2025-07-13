@@ -8,11 +8,11 @@ import java.util.Objects;
  * OAuth 토큰 응답 DTO
  */
 public record OAuthTokenResponse(
-    String expires_dt,        // 만료 일시 (yyyyMMddHHmmss 형식)
-    String token_type,        // 토큰 타입 (bearer)
-    String token,             // 액세스 토큰
-    int return_code,          // 응답 코드 (0: 정상)
-    String return_msg         // 응답 메시지
+        String expires_dt,        // 만료 일시 (yyyyMMddHHmmss 형식)
+        String token_type,        // 토큰 타입 (bearer)
+        String token,             // 액세스 토큰
+        int return_code,          // 응답 코드 (0: 정상)
+        String return_msg         // 응답 메시지
 ) {
     @Builder
     public OAuthTokenResponse {

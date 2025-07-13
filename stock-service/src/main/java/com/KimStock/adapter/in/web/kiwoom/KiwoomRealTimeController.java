@@ -8,9 +8,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
+import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
-import org.springframework.http.codec.ServerSentEvent;
 
 import java.time.Duration;
 import java.util.Arrays;
@@ -31,10 +31,10 @@ public class KiwoomRealTimeController {
     public Flux<ServerSentEvent<RealTimeQuoteResponse>> getStockRealTimeQuote(
             @Parameter(description = "종목코드(여러 개인 경우 콤마로 구분)", example = "005930,035720")
             @RequestParam String stockCodes) {
-        
+
         List<String> stockCodeList = Arrays.asList(stockCodes.split(","));
         log.info("실시간 시세 구독 요청: {}", stockCodeList);
-        
+
         // 실시간 시세 구독 및 응답 변환
         return subscribeRealTimeQuotePort.subscribeStockQuote(stockCodeList)
                 .map(RealTimeQuoteResponse::from)
@@ -55,10 +55,10 @@ public class KiwoomRealTimeController {
     public boolean unsubscribeStockQuote(
             @Parameter(description = "종목코드(여러 개인 경우 콤마로 구분)", example = "005930,035720")
             @RequestParam String stockCodes) {
-        
+
         List<String> stockCodeList = Arrays.asList(stockCodes.split(","));
         log.info("실시간 시세 구독 해지 요청: {}", stockCodeList);
-        
+
         return subscribeRealTimeQuotePort.unsubscribeStockQuote(stockCodeList);
     }
 

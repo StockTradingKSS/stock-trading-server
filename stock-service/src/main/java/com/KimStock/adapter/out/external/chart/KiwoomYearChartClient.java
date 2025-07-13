@@ -43,7 +43,6 @@ public class KiwoomYearChartClient {
     }
 
     /**
-     *
      * @return : 키움증권 일봉 조회는 최대 600개의 데이터가 조회 됨
      */
     public Mono<List<StockCandle>> loadYearCandles(YearStockCandleRequest request) {
@@ -128,7 +127,7 @@ public class KiwoomYearChartClient {
         }
 
         public static YearStockCandleRequest of(String stockCode, boolean isUpdatedPrice, LocalDateTime lastDateTime) {
-            if(lastDateTime == null) {
+            if (lastDateTime == null) {
                 lastDateTime = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
             }
             return YearStockCandleRequest.builder()
@@ -200,7 +199,7 @@ public class KiwoomYearChartClient {
                 stockInfo = Objects.requireNonNullElse(stockInfo, "");
                 updateStockPriceEvent = Objects.requireNonNullElse(updateStockPriceEvent, "");
                 previousClosePrice = Objects.requireNonNullElse(previousClosePrice, "0");
-                if(previousClosePrice.isBlank()) {
+                if (previousClosePrice.isBlank()) {
                     previousClosePrice = "0";
                 }
             }

@@ -33,6 +33,7 @@ public class KiwoomLoadAccountBalanceAdapter implements LoadAccountBalancePort {
         this.kiwoomAuthAdapter = kiwoomAuthAdapter;
         this.clientErrorHandler = clientErrorHandler;
     }
+
     @Override
     public Mono<AccountBalance> loadAccountBalance() {
         AccountBalanceRequest request = AccountBalanceRequest.getDefaultRequest();
@@ -91,8 +92,8 @@ public class KiwoomLoadAccountBalanceAdapter implements LoadAccountBalancePort {
     ) {
         public AccountBalance mapToAccountBalance() {
             List<HoldingStock> holdingStocks = stockHoldings == null
-                ? List.of()
-                : stockHoldings.stream()
+                    ? List.of()
+                    : stockHoldings.stream()
                     .map(StockHoldingResponse::mapToHoldingStock)
                     .collect(Collectors.toList());
 
@@ -110,29 +111,29 @@ public class KiwoomLoadAccountBalanceAdapter implements LoadAccountBalancePort {
         }
 
         public record StockHoldingResponse(
-            @JsonProperty("stk_cd") String stockCode,  // 종목번호
-            @JsonProperty("stk_nm") String stockName,  // 종목명
-            @JsonProperty("evltv_prft") String evaluationProfit,  // 평가손익
-            @JsonProperty("prft_rt") String profitRate,  // 수익률(%)
-            @JsonProperty("pur_pric") String purchasePrice,  // 매입가
-            @JsonProperty("pred_close_pric") String previousClosePrice,  // 전일종가
-            @JsonProperty("rmnd_qty") String remainQuantity,  // 보유수량
-            @JsonProperty("trde_able_qty") String tradeableQuantity,  // 매매가능수량
-            @JsonProperty("cur_prc") String currentPrice,  // 현재가
-            @JsonProperty("pred_buyq") String previousBuyQuantity,  // 전일매수수량
-            @JsonProperty("pred_sellq") String previousSellQuantity,  // 전일매도수량
-            @JsonProperty("tdy_buyq") String todayBuyQuantity,  // 금일매수수량
-            @JsonProperty("tdy_sellq") String todaySellQuantity,  // 금일매도수량
-            @JsonProperty("pur_amt") String purchaseAmount,  // 매입금액
-            @JsonProperty("pur_cmsn") String purchaseCommission,  // 매입수수료
-            @JsonProperty("evlt_amt") String evaluationAmount,  // 평가금액
-            @JsonProperty("sell_cmsn") String sellCommission,  // 평가수수료
-            @JsonProperty("tax") String tax,  // 세금
-            @JsonProperty("sum_cmsn") String totalCommission,  // 수수료합
-            @JsonProperty("poss_rt") String possessionRate,  // 보유비중(%)
-            @JsonProperty("crd_tp") String creditType,  // 신용구분
-            @JsonProperty("crd_tp_nm") String creditTypeName,  // 신용구분명
-            @JsonProperty("crd_loan_dt") String creditLoanDate  // 대출일
+                @JsonProperty("stk_cd") String stockCode,  // 종목번호
+                @JsonProperty("stk_nm") String stockName,  // 종목명
+                @JsonProperty("evltv_prft") String evaluationProfit,  // 평가손익
+                @JsonProperty("prft_rt") String profitRate,  // 수익률(%)
+                @JsonProperty("pur_pric") String purchasePrice,  // 매입가
+                @JsonProperty("pred_close_pric") String previousClosePrice,  // 전일종가
+                @JsonProperty("rmnd_qty") String remainQuantity,  // 보유수량
+                @JsonProperty("trde_able_qty") String tradeableQuantity,  // 매매가능수량
+                @JsonProperty("cur_prc") String currentPrice,  // 현재가
+                @JsonProperty("pred_buyq") String previousBuyQuantity,  // 전일매수수량
+                @JsonProperty("pred_sellq") String previousSellQuantity,  // 전일매도수량
+                @JsonProperty("tdy_buyq") String todayBuyQuantity,  // 금일매수수량
+                @JsonProperty("tdy_sellq") String todaySellQuantity,  // 금일매도수량
+                @JsonProperty("pur_amt") String purchaseAmount,  // 매입금액
+                @JsonProperty("pur_cmsn") String purchaseCommission,  // 매입수수료
+                @JsonProperty("evlt_amt") String evaluationAmount,  // 평가금액
+                @JsonProperty("sell_cmsn") String sellCommission,  // 평가수수료
+                @JsonProperty("tax") String tax,  // 세금
+                @JsonProperty("sum_cmsn") String totalCommission,  // 수수료합
+                @JsonProperty("poss_rt") String possessionRate,  // 보유비중(%)
+                @JsonProperty("crd_tp") String creditType,  // 신용구분
+                @JsonProperty("crd_tp_nm") String creditTypeName,  // 신용구분명
+                @JsonProperty("crd_loan_dt") String creditLoanDate  // 대출일
         ) {
             public HoldingStock mapToHoldingStock() {
                 return HoldingStock.builder()

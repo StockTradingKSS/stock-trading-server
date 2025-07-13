@@ -319,6 +319,7 @@ public class KiwoomOrderAdapter implements RequestStockOrderPort {
 
         /**
          * 응답이 정상인지 확인
+         *
          * @return 정상 여부
          */
         public boolean isSuccess() {

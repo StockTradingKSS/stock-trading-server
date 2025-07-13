@@ -20,7 +20,7 @@ public class KiwoomWebClientConfig {
     @Value("${kiwoom.api.base-url}")
     private String baseUrl;
 
-    @Bean( name = "kiwoomWebClient")
+    @Bean(name = "kiwoomWebClient")
     public WebClient kiwoomInvestmentWebClient() {
         // 메모리 제한 설정 확장 (기본값: 256KB)
         final int size = 16 * 1024 * 1024; // 16MB

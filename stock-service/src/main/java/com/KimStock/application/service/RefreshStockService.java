@@ -8,8 +8,8 @@ import com.KimStock.domain.model.type.MarketType;
 import com.common.UseCase;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -20,20 +20,28 @@ public class RefreshStockService implements RefreshStockUseCase {
     private final LoadStockListPort loadStockListPort;
 
     @Override
-    public Mono<Boolean> refreshStock() {
-        // KOSPI와 KOSDAQ 종목 정보들을 외부 API 를 통해 받아온다.
-        // 받아온 종목 정보를 DB에 저장한다.
-        Mono<List<Stock>> kosdaqMono = loadStockListPort.loadStockInfoListBy(MarketType.KOSDAQ, null, null)
-                .doOnSuccess(saveStockListPort::saveStockList);
+    public boolean refreshStock() {
+        try {
+            // KOSPI와 KOSDAQ 종목 정보들을 외부 API 를 통해 받아온다.
+            List<Stock> kosdaqStocks = loadStockListPort.loadStockInfoListBy(MarketType.KOSDAQ, null, null).block();
+            List<Stock> kospiStocks = loadStockListPort.loadStockInfoListBy(MarketType.KOSPI, null, null).block();
 
-        Mono<List<Stock>> kospiMono = loadStockListPort.loadStockInfoListBy(MarketType.KOSPI, null, null)
-                .doOnSuccess(saveStockListPort::saveStockList);
+            // 두 리스트를 합쳐서 저장
+            List<Stock> allStocks = new ArrayList<>();
+            assert kosdaqStocks != null;
+            assert kospiStocks != null;
 
-        return Mono.zip(kosdaqMono, kospiMono)
-                .map(tuple -> true)
-                .onErrorResume(e -> {
-                    log.error("Failed to refresh stock information", e);
-                    return Mono.just(false);
-                });
+            allStocks.addAll(kosdaqStocks);
+            allStocks.addAll(kospiStocks);
+
+            // 받아온 종목 정보를 DB에 저장한다.
+            saveStockListPort.saveStockList(allStocks);
+
+            log.info("Successfully refreshed stock information. Total stocks: {}", allStocks.size());
+            return true;
+        } catch (Exception e) {
+            log.error("Failed to refresh stock information", e);
+            return false;
+        }
     }
 }

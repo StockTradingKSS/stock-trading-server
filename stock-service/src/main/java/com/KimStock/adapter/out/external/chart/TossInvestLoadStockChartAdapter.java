@@ -15,9 +15,9 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class TossInvestLoadStockChartAdapter implements LoadStockChartPort {
-    
+
     private final TossInvestChartClient tossInvestChartClient;
-    
+
     @Override
     public Mono<List<StockCandle>> loadStockCandleListBy(String stockCode, CandleInterval candleInterval, LocalDateTime lastDateTime) {
         log.info("Loading {} candles for stock code: {} from: {}", candleInterval, stockCode, lastDateTime);

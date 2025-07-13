@@ -42,7 +42,6 @@ public class KiwoomWeekChartClient {
     }
 
     /**
-     *
      * @return : 키움증권 일봉 조회는 최대 600개의 데이터가 조회 됨
      */
     public Mono<List<StockCandle>> loadWeekCandles(WeekStockCandleRequest request) {
@@ -196,7 +195,7 @@ public class KiwoomWeekChartClient {
                 stockInfo = Objects.requireNonNullElse(stockInfo, "");
                 updateStockPriceEvent = Objects.requireNonNullElse(updateStockPriceEvent, "");
                 previousClosePrice = Objects.requireNonNullElse(previousClosePrice, "0");
-                if(previousClosePrice.isBlank()) {
+                if (previousClosePrice.isBlank()) {
                     previousClosePrice = "0";
                 }
             }

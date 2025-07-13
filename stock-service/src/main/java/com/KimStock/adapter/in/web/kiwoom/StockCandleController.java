@@ -10,7 +10,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
@@ -27,9 +26,9 @@ public class StockCandleController {
 
     private final LoadStockChartPort loadStockChartPort;
 
-    @GetMapping(value = "/{stock-code}", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @GetMapping("/{stock-code}")
     @Operation(summary = "주식 캔들 조회", description = "주식 캔들 조회")
-    public Mono<List<StockCandle>> getMockStockRealTimeQuote(
+    public Mono<List<StockCandle>> getStockCandle(
             @PathVariable(name = "stock-code") String stockCode,
             @RequestParam(name = "candle-interval")
             @Parameter
@@ -41,9 +40,6 @@ public class StockCandleController {
                     schema = @Schema(type = "string", format = "date-time")
             ) LocalDateTime lastDateTime
     ) {
-
         return loadStockChartPort.loadStockCandleListBy(stockCode, candleInterval, lastDateTime);
     }
 }
-
-

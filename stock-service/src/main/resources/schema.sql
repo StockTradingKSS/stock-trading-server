@@ -1,88 +1,94 @@
 -- Stock 테이블
-CREATE TABLE IF NOT EXISTS stock (
-    code VARCHAR(20) PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    list_count BIGINT,
-    audit_info VARCHAR(255),
-    reg_day VARCHAR(20),
-    state VARCHAR(20),
-    market_code VARCHAR(20),
-    market_name VARCHAR(50),
-    up_name VARCHAR(50),
-    up_size_name VARCHAR(50),
+CREATE TABLE IF NOT EXISTS stock
+(
+    code               VARCHAR(20) PRIMARY KEY,
+    name               VARCHAR(100) NOT NULL,
+    list_count         BIGINT,
+    audit_info         VARCHAR(255),
+    reg_day            VARCHAR(20),
+    state              VARCHAR(20),
+    market_code        VARCHAR(20),
+    market_name        VARCHAR(50),
+    up_name            VARCHAR(50),
+    up_size_name       VARCHAR(50),
     company_class_name VARCHAR(50),
-    order_warning VARCHAR(50),
-    nxt_enable BOOLEAN DEFAULT FALSE
+    order_warning      VARCHAR(50),
+    nxt_enable         BOOLEAN DEFAULT FALSE
 );
 
 -- Day Stock Candle 테이블
-CREATE TABLE IF NOT EXISTS day_stock_candle (
+CREATE TABLE IF NOT EXISTS day_stock_candle
+(
     id BIGSERIAL PRIMARY KEY,
-    code VARCHAR(20) NOT NULL,
-    current_price BIGINT,
+    code           VARCHAR(20) NOT NULL,
+    current_price  BIGINT,
     previous_price BIGINT,
-    volume BIGINT,
-    open_price BIGINT,
-    high_price BIGINT,
-    low_price BIGINT,
-    close_price BIGINT,
-    open_time TIMESTAMP
+    volume         BIGINT,
+    open_price     BIGINT,
+    high_price     BIGINT,
+    low_price      BIGINT,
+    close_price    BIGINT,
+    open_time      TIMESTAMP
 );
 
 -- Minute Stock Candle 테이블
-CREATE TABLE IF NOT EXISTS minute_stock_candle (
+CREATE TABLE IF NOT EXISTS minute_stock_candle
+(
     id BIGSERIAL PRIMARY KEY,
-    code VARCHAR(20) NOT NULL,
-    current_price BIGINT,
+    code           VARCHAR(20) NOT NULL,
+    current_price  BIGINT,
     previous_price BIGINT,
-    volume BIGINT,
-    open_price BIGINT,
-    high_price BIGINT,
-    low_price BIGINT,
-    close_price BIGINT,
-    open_time TIMESTAMP
+    volume         BIGINT,
+    open_price     BIGINT,
+    high_price     BIGINT,
+    low_price      BIGINT,
+    close_price    BIGINT,
+    open_time      TIMESTAMP
 );
 
 -- Week Stock Candle 테이블
-CREATE TABLE IF NOT EXISTS week_stock_candle (
+CREATE TABLE IF NOT EXISTS week_stock_candle
+(
     id BIGSERIAL PRIMARY KEY,
-    code VARCHAR(20) NOT NULL,
-    current_price BIGINT,
+    code           VARCHAR(20) NOT NULL,
+    current_price  BIGINT,
     previous_price BIGINT,
-    volume BIGINT,
-    open_price BIGINT,
-    high_price BIGINT,
-    low_price BIGINT,
-    close_price BIGINT,
-    open_time TIMESTAMP
+    volume         BIGINT,
+    open_price     BIGINT,
+    high_price     BIGINT,
+    low_price      BIGINT,
+    close_price    BIGINT,
+    open_time      TIMESTAMP
 );
 
 -- Month Stock Candle 테이블
-CREATE TABLE IF NOT EXISTS month_stock_candle (
+CREATE TABLE IF NOT EXISTS month_stock_candle
+(
     id BIGSERIAL PRIMARY KEY,
-    code VARCHAR(20) NOT NULL,
-    current_price BIGINT,
+    code           VARCHAR(20) NOT NULL,
+    current_price  BIGINT,
     previous_price BIGINT,
-    volume BIGINT,
-    open_price BIGINT,
-    high_price BIGINT,
-    low_price BIGINT,
-    close_price BIGINT,
-    open_time TIMESTAMP
+    volume         BIGINT,
+    open_price     BIGINT,
+    high_price     BIGINT,
+    low_price      BIGINT,
+    close_price    BIGINT,
+    open_time      TIMESTAMP
 );
 
 -- Year Stock Candle 테이블
-CREATE TABLE IF NOT EXISTS year_stock_candle (
+CREATE TABLE IF NOT EXISTS year_stock_candle
+(
     id BIGSERIAL PRIMARY KEY,
-    code VARCHAR(20) NOT NULL,
-    current_price BIGINT,
+    code           VARCHAR(20) NOT NULL,
+    current_price  BIGINT,
     previous_price BIGINT,
-    volume BIGINT,
-    open_price BIGINT,
-    high_price BIGINT,
-    low_price BIGINT,
-    close_price BIGINT,
-    open_time TIMESTAMP
+    volume         BIGINT,
+    open_price     BIGINT,
+    high_price     BIGINT,
+    low_price      BIGINT,
+    close_price    BIGINT,
+    open_time      TIMESTAMP
 );
 
 -- 인덱스 생성

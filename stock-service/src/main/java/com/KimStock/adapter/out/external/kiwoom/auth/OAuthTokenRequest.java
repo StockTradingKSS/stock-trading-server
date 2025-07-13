@@ -10,9 +10,9 @@ import java.util.Objects;
  */
 public record
 OAuthTokenRequest(
-    @JsonProperty("grant_type") String grantType,  // 인증 타입 (client_credentials)
-    String appkey,                                // 앱 키
-    String secretkey                              // 앱 시크릿
+        @JsonProperty("grant_type") String grantType,  // 인증 타입 (client_credentials)
+        String appkey,                                // 앱 키
+        String secretkey                              // 앱 시크릿
 ) {
     @Builder
     public OAuthTokenRequest {

@@ -23,7 +23,7 @@ public class KiwoomWebSocketClient extends WebSocketClient {
     private boolean isConnected = false;
     private final CountDownLatch loginLatch = new CountDownLatch(1);
     private FluxSink<Map<String, Object>> messageSink;
-    
+
     // 현재 구독 중인 그룹 관리
     private final Map<String, List<String>> subscribedGroups = new ConcurrentHashMap<>();
     private int currentGroupNo = 1;  // 그룹 번호 시작값
@@ -105,6 +105,7 @@ public class KiwoomWebSocketClient extends WebSocketClient {
 
     /**
      * 종목 실시간 시세 구독 등록
+     *
      * @param stockCodes 종목 코드 목록
      * @return 그룹 번호
      */
@@ -122,7 +123,7 @@ public class KiwoomWebSocketClient extends WebSocketClient {
         }
 
         String groupNo = String.valueOf(currentGroupNo++);
-        
+
         JsonObject registerMessage = new JsonObject();
         registerMessage.addProperty("trnm", "REG");
         registerMessage.addProperty("grp_no", groupNo);
@@ -149,15 +150,16 @@ public class KiwoomWebSocketClient extends WebSocketClient {
         // 메시지 전송
         send(gson.toJson(registerMessage));
         log.info("실시간 시세 구독 등록 메시지 전송. 그룹번호: {}, 종목: {}", groupNo, stockCodes);
-        
+
         // 구독 정보 저장
         subscribedGroups.put(groupNo, stockCodes);
-        
+
         return groupNo;
     }
 
     /**
      * 종목 실시간 시세 구독 해지
+     *
      * @param groupNo 해지할 그룹 번호
      * @return 성공 여부
      */
@@ -173,15 +175,16 @@ public class KiwoomWebSocketClient extends WebSocketClient {
 
         send(gson.toJson(removeMessage));
         log.info("실시간 시세 구독 해지 메시지 전송. 그룹번호: {}", groupNo);
-        
+
         // 구독 정보 제거
         subscribedGroups.remove(groupNo);
-        
+
         return true;
     }
 
     /**
      * 모든 그룹 구독 해지
+     *
      * @return 성공 여부
      */
     public boolean unsubscribeAllGroups() {
@@ -197,12 +200,13 @@ public class KiwoomWebSocketClient extends WebSocketClient {
                 allSuccess = false;
             }
         }
-        
+
         return allSuccess;
     }
 
     /**
      * 연결 상태 확인
+     *
      * @return 연결 상태
      */
     public boolean isConnected() {

@@ -55,6 +55,7 @@ public class KiwoomAuthAdapter {
 
     /**
      * OAuth 토큰 발급
+     *
      * @return 토큰 응답
      */
     public Mono<OAuthTokenResponse> requestAccessToken() {
@@ -97,6 +98,7 @@ public class KiwoomAuthAdapter {
 
     /**
      * 토큰 폐기
+     *
      * @return 폐기 결과
      */
     public Mono<Void> revokeToken() {
@@ -143,6 +145,7 @@ public class KiwoomAuthAdapter {
 
     /**
      * 토큰 정보 업데이트
+     *
      * @param response 토큰 응답
      */
     private void updateTokenInfo(OAuthTokenResponse response) {
@@ -171,6 +174,7 @@ public class KiwoomAuthAdapter {
 
     /**
      * 토큰이 만료되었는지 확인하고 필요시 갱신
+     *
      * @return 유효한 토큰 반환
      */
     public Mono<String> getValidToken() {

@@ -20,6 +20,7 @@ public enum TradeType {
 
     /**
      * 코드로 TradeType 찾기
+     *
      * @param code 찾을 코드
      * @return 해당 코드의 TradeType, 없으면 null
      */
@@ -27,13 +28,13 @@ public enum TradeType {
         if (code == null) {
             return LIMIT; // 기본값은 지정가
         }
-        
+
         for (TradeType type : TradeType.values()) {
             if (type.code.equals(code)) {
                 return type;
             }
         }
-        
+
         return LIMIT; // 일치하는 코드가 없으면 지정가 반환
     }
 }

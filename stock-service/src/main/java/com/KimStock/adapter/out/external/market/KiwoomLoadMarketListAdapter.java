@@ -85,7 +85,7 @@ public class KiwoomLoadMarketListAdapter implements LoadMarketListPort {
      * 업종코드 요청 DTO
      */
     private record MarketCodeRequest(
-        String mrkt_tp     // 0:코스피(거래소),1:코스닥,2:KOSPI200,4:KOSPI100,7:KRX100(통합지수)
+            String mrkt_tp     // 0:코스피(거래소),1:코스닥,2:KOSPI200,4:KOSPI100,7:KRX100(통합지수)
     ) {
         @Builder
         public MarketCodeRequest {
@@ -96,7 +96,7 @@ public class KiwoomLoadMarketListAdapter implements LoadMarketListPort {
             // 0:코스피,10:코스닥,3:ELW,8:ETF,30:K-OTC,50:코넥스,5:신주인수권,4:뮤추얼펀드,6:리츠,9:하이일드
             String mrkt_tp = "0";
 
-            switch (marketType){
+            switch (marketType) {
                 case KOSPI -> mrkt_tp = "0";
                 case KOSDAQ -> mrkt_tp = "1";
                 case null, default -> throw new IllegalArgumentException("marketType is null");
@@ -112,9 +112,9 @@ public class KiwoomLoadMarketListAdapter implements LoadMarketListPort {
      * 업종코드 응답 DTO
      */
     private record MarketCodeResponse(
-        String return_msg,
-        @JsonProperty(value = "list", access = JsonProperty.Access.WRITE_ONLY)
-        List<MarketCode> marketCodeList
+            String return_msg,
+            @JsonProperty(value = "list", access = JsonProperty.Access.WRITE_ONLY)
+            List<MarketCode> marketCodeList
     ) {
         @Builder
         public MarketCodeResponse {
@@ -126,10 +126,10 @@ public class KiwoomLoadMarketListAdapter implements LoadMarketListPort {
          * 업종코드 아이템
          */
         public record MarketCode(
-            String marketCode,           // 시장구분코드
-            String code,            // 코드
-            String name,           // 업종명
-            String group          // 그룹
+                String marketCode,           // 시장구분코드
+                String code,            // 코드
+                String name,           // 업종명
+                String group          // 그룹
         ) {
             @Builder
             public MarketCode {
@@ -139,7 +139,7 @@ public class KiwoomLoadMarketListAdapter implements LoadMarketListPort {
                 group = Objects.requireNonNullElse(group, "");
             }
 
-            public Market mapToMarket(){
+            public Market mapToMarket() {
                 return Market.builder()
                         .marketCode(marketCode)
                         .code(code)
