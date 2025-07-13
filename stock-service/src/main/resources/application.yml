@@ -13,13 +13,22 @@ spring:
     driver-class-name: org.postgresql.Driver
   
   jpa:
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    # Aurora DSQL Hibernate Dialect 사용
+    database-platform: software.amazon.dsql.hibernate.dialect.AuroraDSQLDialect
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     properties:
       hibernate:
+        # DSQL 전용 설정
+        dialect: software.amazon.dsql.hibernate.dialect.AuroraDSQLDialect
+        # 스키마 설정
         default_schema: stock_trading
+        # DSQL 최적화 설정
+        jdbc.batch_size: 20
+        order_inserts: true
+        order_updates: true
     show-sql: true
+    open-in-view: false
   
   liquibase:
     enabled: false
@@ -52,6 +61,9 @@ app:
       user: ${DSQL_USER:admin}
       database: ${DSQL_DATABASE:postgres}
       region: ${DSQL_REGION:ap-northeast-2}
+  dsql:
+    token:
+      refresh-interval: 600000  # 10분마다 토큰 갱신
 
 env:
   file:
@@ -61,5 +73,9 @@ logging:
   level:
     org.springframework.r2dbc: ERROR
     org.springframework.sql.init: DEBUG
-    com.KimStock.config.DsqlConfig: DEBUG
-    com.KimStock.application.service.DsqlTestService: DEBUG
+    com.KimStock.config.com.KimStock.adapter.out.persistence.config.DsqlConfig: DEBUG
+    com.KimStock.config.com.KimStock.adapter.out.persistence.config.DsqlExceptionOverride: DEBUG
+    # DSQL 관련 로깅 추가
+    software.amazon.dsql: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
