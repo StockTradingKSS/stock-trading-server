@@ -27,13 +27,13 @@ spring:
         jdbc.batch_size: 20
         order_inserts: true
         order_updates: true
-        # 쿼리 로깅 설정
-        format_sql: true
-        use_sql_comments: true
-        # 성능 로깅
-        generate_statistics: true
+        # 쿼리 로깅 설정 - 개발 시에만 필요
+        format_sql: false
+        use_sql_comments: false
+        # 성능 로깅 - 운영에서는 비활성화
+        generate_statistics: false
         jdbc.batch_versioned_data: true
-    show-sql: true
+    show-sql: false
     open-in-view: false
   
   liquibase:
@@ -77,18 +77,18 @@ env:
 
 logging:
   level:
-    org.springframework.sql.init: DEBUG
-    com.KimStock.config.com.KimStock.adapter.out.persistence.config.DsqlConfig: DEBUG
-    com.KimStock.config.com.KimStock.adapter.out.persistence.config.DsqlExceptionOverride: DEBUG
-    # DSQL 관련 로깅 추가
-    software.amazon.dsql: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
-    # SQL 쿼리 로깅 강화
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql: TRACE
-    org.hibernate.orm.jdbc.bind: TRACE
+    org.springframework.sql.init: WARN
+    com.KimStock.config.com.KimStock.adapter.out.persistence.config.DsqlConfig: INFO
+    com.KimStock.config.com.KimStock.adapter.out.persistence.config.DsqlExceptionOverride: INFO
+    # DSQL 관련 로깅
+    software.amazon.dsql: WARN
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN
+    # SQL 쿼리 로깅 - 필요시에만 DEBUG로 변경
+    org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql: WARN
+    org.hibernate.orm.jdbc.bind: WARN
     # JPA 쿼리 로깅
-    org.springframework.orm.jpa: DEBUG
-    org.springframework.transaction: DEBUG
+    org.springframework.orm.jpa: WARN
+    org.springframework.transaction: WARN
     # 커스텀 로깅
-    com.KimStock.adapter.out.persistence: DEBUG
+    com.KimStock.adapter.out.persistence: INFO
