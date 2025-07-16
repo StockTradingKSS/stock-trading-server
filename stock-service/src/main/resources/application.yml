@@ -27,6 +27,12 @@ spring:
         jdbc.batch_size: 20
         order_inserts: true
         order_updates: true
+        # 쿼리 로깅 설정
+        format_sql: true
+        use_sql_comments: true
+        # 성능 로깅
+        generate_statistics: true
+        jdbc.batch_versioned_data: true
     show-sql: true
     open-in-view: false
   
@@ -71,11 +77,18 @@ env:
 
 logging:
   level:
-    org.springframework.r2dbc: ERROR
     org.springframework.sql.init: DEBUG
     com.KimStock.config.com.KimStock.adapter.out.persistence.config.DsqlConfig: DEBUG
     com.KimStock.config.com.KimStock.adapter.out.persistence.config.DsqlExceptionOverride: DEBUG
     # DSQL 관련 로깅 추가
     software.amazon.dsql: DEBUG
-    org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    # SQL 쿼리 로깅 강화
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql: TRACE
+    org.hibernate.orm.jdbc.bind: TRACE
+    # JPA 쿼리 로깅
+    org.springframework.orm.jpa: DEBUG
+    org.springframework.transaction: DEBUG
+    # 커스텀 로깅
+    com.KimStock.adapter.out.persistence: DEBUG
