@@ -8,5 +8,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface LoadStockChartPort {
-    Mono<List<StockCandle>> loadStockCandleListBy(String stockCode, CandleInterval candleInterval, LocalDateTime lastDateTime);
+    Mono<List<StockCandle>> loadStockCandleListBy(
+            String stockCode,
+            CandleInterval candleInterval,
+            LocalDateTime fromDateTime,
+            LocalDateTime toDateTime);
 }

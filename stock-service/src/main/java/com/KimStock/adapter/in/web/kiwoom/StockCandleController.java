@@ -33,13 +33,19 @@ public class StockCandleController {
             @RequestParam(name = "candle-interval")
             @Parameter
             CandleInterval candleInterval,
-            @RequestParam(name = "lastDateTime")
+            @RequestParam(name = "fromDateTime")
             @Parameter(
-                    description = "마지막 조회 시간",
+                    description = "시작 조회 시간",
                     example = "2023-04-30T10:00:00",
                     schema = @Schema(type = "string", format = "date-time")
-            ) LocalDateTime lastDateTime
+            ) LocalDateTime fromDateTime,
+            @RequestParam(name = "toDateTime")
+            @Parameter(
+                    description = "끝 조회 시간(미포함)",
+                    example = "2023-04-30T10:00:00",
+                    schema = @Schema(type = "string", format = "date-time")
+            ) LocalDateTime toDateTime
     ) {
-        return loadStockChartPort.loadStockCandleListBy(stockCode, candleInterval, lastDateTime);
+        return loadStockChartPort.loadStockCandleListBy(stockCode, candleInterval, fromDateTime, toDateTime);
     }
 }
