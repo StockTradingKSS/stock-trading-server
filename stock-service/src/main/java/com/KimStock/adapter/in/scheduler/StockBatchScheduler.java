@@ -6,7 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
 
 @Component
 @RequiredArgsConstructor
@@ -16,10 +15,6 @@ public class StockBatchScheduler {
 
     @Scheduled(cron = "0 30 7 * * *", zone = "Asia/Seoul")
     public void saveStockScheduler() {
-        refreshStockUseCase.refreshStock()
-                        .subscribe(isSuccess -> {
-                                String message = isSuccess ? "Success" : "Failed";
-                                log.info("Refresh stock {} at time {}",message, LocalDateTime.now());
-                        });
+        refreshStockUseCase.refreshStock();
     }
 }

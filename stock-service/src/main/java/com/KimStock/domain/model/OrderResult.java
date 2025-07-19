@@ -13,11 +13,11 @@ public class OrderResult {
     private final OrderType orderType;       // 주문유형
     private final int quantity;              // 수량
     private final String resultMessage;      // 결과 메시지
-    
+
     public enum OrderType {
         BUY, SELL, MODIFY, CANCEL
     }
-    
+
     public static OrderResult createBuyResult(String orderNo, String stockCode, String marketType, int quantity, String resultMessage) {
         return OrderResult.builder()
                 .orderNo(orderNo)
@@ -28,7 +28,7 @@ public class OrderResult {
                 .resultMessage(resultMessage)
                 .build();
     }
-    
+
     public static OrderResult createSellResult(String orderNo, String stockCode, String marketType, int quantity, String resultMessage) {
         return OrderResult.builder()
                 .orderNo(orderNo)
@@ -39,7 +39,7 @@ public class OrderResult {
                 .resultMessage(resultMessage)
                 .build();
     }
-    
+
     public static OrderResult createModifyResult(String orderNo, String originalOrderNo, String stockCode, String marketType, int quantity, String resultMessage) {
         return OrderResult.builder()
                 .orderNo(orderNo)
@@ -51,7 +51,7 @@ public class OrderResult {
                 .resultMessage(resultMessage)
                 .build();
     }
-    
+
     public static OrderResult createCancelResult(String orderNo, String originalOrderNo, String stockCode, int quantity, String resultMessage) {
         return OrderResult.builder()
                 .orderNo(orderNo)

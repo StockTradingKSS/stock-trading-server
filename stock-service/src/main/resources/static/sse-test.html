@@ -11,21 +11,25 @@
             padding: 20px;
             background-color: #f5f5f5;
         }
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
         }
+
         h1 {
             color: #333;
             text-align: center;
             margin-bottom: 30px;
         }
+
         .stock-container {
             display: flex;
             flex-wrap: wrap;
             gap: 20px;
             justify-content: center;
         }
+
         .stock-card {
             background: white;
             border-radius: 10px;
@@ -34,59 +38,73 @@
             width: 300px;
             transition: transform 0.3s ease;
         }
+
         .stock-card:hover {
             transform: translateY(-5px);
         }
+
         .stock-name {
             font-size: 18px;
             font-weight: bold;
             margin-bottom: 5px;
         }
+
         .stock-code {
             color: #666;
             font-size: 14px;
             margin-bottom: 15px;
         }
+
         .price {
             font-size: 24px;
             font-weight: bold;
             margin-bottom: 10px;
         }
+
         .price.up {
             color: #f44336;
         }
+
         .price.down {
             color: #2196f3;
         }
+
         .change {
             font-size: 16px;
             margin-bottom: 15px;
         }
+
         .change.up {
             color: #f44336;
         }
+
         .change.down {
             color: #2196f3;
         }
+
         .details {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 10px;
             font-size: 14px;
         }
+
         .label {
             color: #666;
         }
+
         .value {
             font-weight: bold;
             text-align: right;
         }
+
         .controls {
             margin-bottom: 30px;
             display: flex;
             justify-content: center;
             gap: 10px;
         }
+
         .btn {
             padding: 10px 20px;
             background-color: #4CAF50;
@@ -97,151 +115,161 @@
             font-size: 16px;
             transition: background-color 0.3s ease;
         }
+
         .btn:hover {
             background-color: #388E3C;
         }
+
         .btn.disconnect {
             background-color: #f44336;
         }
+
         .btn.disconnect:hover {
             background-color: #D32F2F;
         }
+
         .status {
             text-align: center;
             font-size: 14px;
             color: #666;
             margin-bottom: 20px;
         }
+
         @keyframes flashAnimation {
-            0% { background-color: rgba(76, 175, 80, 0.3); }
-            100% { background-color: transparent; }
+            0% {
+                background-color: rgba(76, 175, 80, 0.3);
+            }
+            100% {
+                background-color: transparent;
+            }
         }
+
         .flash {
             animation: flashAnimation 1s ease;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>실시간 주식 시세</h1>
-        
-        <div class="controls">
-            <button id="connect-mock" class="btn">Mock 데이터 연결</button>
-            <button id="connect-real" class="btn">실제 데이터 연결</button>
-            <button id="disconnect" class="btn disconnect" disabled>연결 해제</button>
-        </div>
-        
-        <div id="status" class="status">연결 상태: 대기 중</div>
-        
-        <div id="stock-container" class="stock-container">
-            <!-- 여기에 주식 카드가 동적으로 추가됩니다 -->
-        </div>
+<div class="container">
+    <h1>실시간 주식 시세</h1>
+
+    <div class="controls">
+        <button id="connect-mock" class="btn">Mock 데이터 연결</button>
+        <button id="connect-real" class="btn">실제 데이터 연결</button>
+        <button id="disconnect" class="btn disconnect" disabled>연결 해제</button>
     </div>
 
-    <script>
-        // 전역 변수
-        let eventSource = null;
-        const stockData = {};
+    <div id="status" class="status">연결 상태: 대기 중</div>
 
-        // DOM 요소
-        const stockContainer = document.getElementById('stock-container');
-        const connectMockBtn = document.getElementById('connect-mock');
-        const connectRealBtn = document.getElementById('connect-real');
-        const disconnectBtn = document.getElementById('disconnect');
-        const statusEl = document.getElementById('status');
+    <div id="stock-container" class="stock-container">
+        <!-- 여기에 주식 카드가 동적으로 추가됩니다 -->
+    </div>
+</div>
 
-        // 버튼 이벤트 리스너
-        connectMockBtn.addEventListener('click', () => connectSSE('/api/mock/realtime/quote'));
-        connectRealBtn.addEventListener('click', () => connectSSE('/api/kiwoom/realtime/quote?stockCodes=005930_AL,035720_AL,000660_AL,373220_AL,207940_AL'));
-        disconnectBtn.addEventListener('click', disconnectSSE);
+<script>
+    // 전역 변수
+    let eventSource = null;
+    const stockData = {};
 
-        // SSE 연결 함수
-        function connectSSE(url) {
-            // 이미 연결된 경우 먼저 연결 해제
-            if (eventSource) {
-                disconnectSSE();
-            }
+    // DOM 요소
+    const stockContainer = document.getElementById('stock-container');
+    const connectMockBtn = document.getElementById('connect-mock');
+    const connectRealBtn = document.getElementById('connect-real');
+    const disconnectBtn = document.getElementById('disconnect');
+    const statusEl = document.getElementById('status');
 
-            // 상태 업데이트
-            statusEl.textContent = '연결 상태: 연결 중...';
-            
-            // SSE 연결 생성
-            eventSource = new EventSource(url);
-            
-            // 이벤트 리스너 설정
-            eventSource.addEventListener('open', function(e) {
-                statusEl.textContent = '연결 상태: 연결됨';
-                connectMockBtn.disabled = true;
-                connectRealBtn.disabled = true;
-                disconnectBtn.disabled = false;
-            });
+    // 버튼 이벤트 리스너
+    connectMockBtn.addEventListener('click', () => connectSSE('/api/mock/realtime/quote'));
+    connectRealBtn.addEventListener('click', () => connectSSE('/api/kiwoom/realtime/quote?stockCodes=005930_AL,035720_AL,000660_AL,373220_AL,207940_AL'));
+    disconnectBtn.addEventListener('click', disconnectSSE);
 
-            eventSource.addEventListener('error', function(e) {
-                if (e.readyState === EventSource.CLOSED) {
-                    statusEl.textContent = '연결 상태: 연결 종료됨';
-                } else {
-                    statusEl.textContent = '연결 상태: 오류 발생';
-                    console.error('SSE 오류:', e);
-                }
-                resetButtons();
-            });
-
-            eventSource.addEventListener('quote', function(e) {
-                try {
-                    const quote = JSON.parse(e.data);
-                    updateStockCard(quote);
-                } catch (error) {
-                    console.error('데이터 파싱 오류:', error, e.data);
-                }
-            });
-
-            eventSource.addEventListener('heartbeat', function() {
-                console.log('하트비트 수신:', new Date().toLocaleTimeString());
-            });
+    // SSE 연결 함수
+    function connectSSE(url) {
+        // 이미 연결된 경우 먼저 연결 해제
+        if (eventSource) {
+            disconnectSSE();
         }
 
-        // SSE 연결 해제 함수
-        function disconnectSSE() {
-            if (eventSource) {
-                eventSource.close();
-                eventSource = null;
+        // 상태 업데이트
+        statusEl.textContent = '연결 상태: 연결 중...';
+
+        // SSE 연결 생성
+        eventSource = new EventSource(url);
+
+        // 이벤트 리스너 설정
+        eventSource.addEventListener('open', function (e) {
+            statusEl.textContent = '연결 상태: 연결됨';
+            connectMockBtn.disabled = true;
+            connectRealBtn.disabled = true;
+            disconnectBtn.disabled = false;
+        });
+
+        eventSource.addEventListener('error', function (e) {
+            if (e.readyState === EventSource.CLOSED) {
                 statusEl.textContent = '연결 상태: 연결 종료됨';
-                resetButtons();
-            }
-        }
-
-        // 버튼 상태 초기화
-        function resetButtons() {
-            connectMockBtn.disabled = false;
-            connectRealBtn.disabled = false;
-            disconnectBtn.disabled = true;
-        }
-
-        // 주식 카드 업데이트 함수
-        function updateStockCard(quote) {
-            const stockCode = quote.stockCode;
-            
-            // 이미 존재하는 주식 데이터인지 확인
-            if (!stockData[stockCode]) {
-                // 새 주식 데이터 추가
-                stockData[stockCode] = {
-                    name: getStockName(stockCode), // 종목 코드에 따른 이름 가져오기
-                    data: quote
-                };
-                
-                // 새 카드 생성
-                createStockCard(stockCode);
             } else {
-                // 기존 데이터 업데이트
-                stockData[stockCode].data = quote;
-                updateExistingCard(stockCode);
+                statusEl.textContent = '연결 상태: 오류 발생';
+                console.error('SSE 오류:', e);
             }
-        }
+            resetButtons();
+        });
 
-        // 새 주식 카드 생성
-        function createStockCard(stockCode) {
-            const data = stockData[stockCode].data;
-            const cardHtml = `
+        eventSource.addEventListener('quote', function (e) {
+            try {
+                const quote = JSON.parse(e.data);
+                updateStockCard(quote);
+            } catch (error) {
+                console.error('데이터 파싱 오류:', error, e.data);
+            }
+        });
+
+        eventSource.addEventListener('heartbeat', function () {
+            console.log('하트비트 수신:', new Date().toLocaleTimeString());
+        });
+    }
+
+    // SSE 연결 해제 함수
+    function disconnectSSE() {
+        if (eventSource) {
+            eventSource.close();
+            eventSource = null;
+            statusEl.textContent = '연결 상태: 연결 종료됨';
+            resetButtons();
+        }
+    }
+
+    // 버튼 상태 초기화
+    function resetButtons() {
+        connectMockBtn.disabled = false;
+        connectRealBtn.disabled = false;
+        disconnectBtn.disabled = true;
+    }
+
+    // 주식 카드 업데이트 함수
+    function updateStockCard(quote) {
+        const stockCode = quote.stockCode;
+
+        // 이미 존재하는 주식 데이터인지 확인
+        if (!stockData[stockCode]) {
+            // 새 주식 데이터 추가
+            stockData[stockCode] = {
+                name: getStockName(stockCode), // 종목 코드에 따른 이름 가져오기
+                data: quote
+            };
+
+            // 새 카드 생성
+            createStockCard(stockCode);
+        } else {
+            // 기존 데이터 업데이트
+            stockData[stockCode].data = quote;
+            updateExistingCard(stockCode);
+        }
+    }
+
+    // 새 주식 카드 생성
+    function createStockCard(stockCode) {
+        const data = stockData[stockCode].data;
+        const cardHtml = `
                 <div id="card-${stockCode}" class="stock-card">
                     <div class="stock-name">${stockData[stockCode].name}</div>
                     <div class="stock-code">${stockCode}</div>
@@ -269,101 +297,101 @@
                     </div>
                 </div>
             `;
-            
-            stockContainer.insertAdjacentHTML('beforeend', cardHtml);
-        }
 
-        // 기존 카드 업데이트
-        function updateExistingCard(stockCode) {
-            const card = document.getElementById(`card-${stockCode}`);
-            const data = stockData[stockCode].data;
-            
-            if (card) {
-                // 깜빡이는 효과를 위한 클래스 추가 및 제거
-                card.classList.remove('flash');
-                setTimeout(() => card.classList.add('flash'), 10);
-                
-                // 데이터 업데이트
-                const priceEl = card.querySelector('.price');
-                const changeEl = card.querySelector('.change');
-                
-                priceEl.textContent = formatPrice(data.currentPrice);
-                priceEl.className = `price ${getChangeClass(data.priceChange)}`;
-                
-                changeEl.textContent = `${formatChange(data.priceChange)} (${data.changeRate}%)`;
-                changeEl.className = `change ${getChangeClass(data.priceChange)}`;
-                
-                // 세부 정보 업데이트
-                const details = card.querySelectorAll('.value');
-                details[0].textContent = formatVolume(data.tradingVolume);
-                details[1].textContent = formatNumber(data.accumulatedVolume);
-                details[2].textContent = formatPrice(data.openPrice);
-                details[3].textContent = formatPrice(data.highPrice);
-                details[4].textContent = formatPrice(data.lowPrice);
-                details[5].textContent = formatPrice(data.bidPrice);
-                details[6].textContent = formatPrice(data.askPrice);
-                details[7].textContent = formatTime(data.tradeTime);
-            }
-        }
+        stockContainer.insertAdjacentHTML('beforeend', cardHtml);
+    }
 
-        // 종목 코드에 따른 종목명 반환
-        function getStockName(code) {
-            const stockNames = {
-                '005930': '삼성전자',
-                '035720': '카카오',
-                '000660': 'SK하이닉스',
-                '373220': 'LG에너지솔루션',
-                '207940': '삼성바이오로직스'
-            };
-            return stockNames[code] || `종목 ${code}`;
-        }
+    // 기존 카드 업데이트
+    function updateExistingCard(stockCode) {
+        const card = document.getElementById(`card-${stockCode}`);
+        const data = stockData[stockCode].data;
 
-        // 변화량에 따른 클래스 반환
-        function getChangeClass(change) {
-            const numChange = parseFloat(change);
-            if (numChange > 0) return 'up';
-            if (numChange < 0) return 'down';
-            return '';
-        }
+        if (card) {
+            // 깜빡이는 효과를 위한 클래스 추가 및 제거
+            card.classList.remove('flash');
+            setTimeout(() => card.classList.add('flash'), 10);
 
-        // 가격 포맷팅
-        function formatPrice(price) {
-            if (!price) return '0';
-            const numPrice = parseInt(price.replace(/[^\d-]/g, ''));
-            return numPrice.toLocaleString() + '원';
-        }
+            // 데이터 업데이트
+            const priceEl = card.querySelector('.price');
+            const changeEl = card.querySelector('.change');
 
-        // 변화량 포맷팅
-        function formatChange(change) {
-            if (!change) return '0';
-            const numChange = parseInt(change.replace(/[^\d-]/g, ''));
-            return (numChange >= 0 ? '+' : '') + numChange.toLocaleString();
-        }
+            priceEl.textContent = formatPrice(data.currentPrice);
+            priceEl.className = `price ${getChangeClass(data.priceChange)}`;
 
-        // 거래량 포맷팅
-        function formatVolume(volume) {
-            if (!volume) return '0';
-            return volume;
-        }
+            changeEl.textContent = `${formatChange(data.priceChange)} (${data.changeRate}%)`;
+            changeEl.className = `change ${getChangeClass(data.priceChange)}`;
 
-        // 숫자 포맷팅
-        function formatNumber(num) {
-            if (!num) return '0';
-            return parseInt(num.replace(/[^\d-]/g, '')).toLocaleString();
+            // 세부 정보 업데이트
+            const details = card.querySelectorAll('.value');
+            details[0].textContent = formatVolume(data.tradingVolume);
+            details[1].textContent = formatNumber(data.accumulatedVolume);
+            details[2].textContent = formatPrice(data.openPrice);
+            details[3].textContent = formatPrice(data.highPrice);
+            details[4].textContent = formatPrice(data.lowPrice);
+            details[5].textContent = formatPrice(data.bidPrice);
+            details[6].textContent = formatPrice(data.askPrice);
+            details[7].textContent = formatTime(data.tradeTime);
         }
+    }
 
-        // 시간 포맷팅
-        function formatTime(time) {
-            if (!time) return '-';
-            const timeStr = time.toString();
-            if (timeStr.length === 6) {
-                return `${timeStr.slice(0, 2)}:${timeStr.slice(2, 4)}:${timeStr.slice(4, 6)}`;
-            }
-            return timeStr;
+    // 종목 코드에 따른 종목명 반환
+    function getStockName(code) {
+        const stockNames = {
+            '005930': '삼성전자',
+            '035720': '카카오',
+            '000660': 'SK하이닉스',
+            '373220': 'LG에너지솔루션',
+            '207940': '삼성바이오로직스'
+        };
+        return stockNames[code] || `종목 ${code}`;
+    }
+
+    // 변화량에 따른 클래스 반환
+    function getChangeClass(change) {
+        const numChange = parseFloat(change);
+        if (numChange > 0) return 'up';
+        if (numChange < 0) return 'down';
+        return '';
+    }
+
+    // 가격 포맷팅
+    function formatPrice(price) {
+        if (!price) return '0';
+        const numPrice = parseInt(price.replace(/[^\d-]/g, ''));
+        return numPrice.toLocaleString() + '원';
+    }
+
+    // 변화량 포맷팅
+    function formatChange(change) {
+        if (!change) return '0';
+        const numChange = parseInt(change.replace(/[^\d-]/g, ''));
+        return (numChange >= 0 ? '+' : '') + numChange.toLocaleString();
+    }
+
+    // 거래량 포맷팅
+    function formatVolume(volume) {
+        if (!volume) return '0';
+        return volume;
+    }
+
+    // 숫자 포맷팅
+    function formatNumber(num) {
+        if (!num) return '0';
+        return parseInt(num.replace(/[^\d-]/g, '')).toLocaleString();
+    }
+
+    // 시간 포맷팅
+    function formatTime(time) {
+        if (!time) return '-';
+        const timeStr = time.toString();
+        if (timeStr.length === 6) {
+            return `${timeStr.slice(0, 2)}:${timeStr.slice(2, 4)}:${timeStr.slice(4, 6)}`;
         }
+        return timeStr;
+    }
 
-        // 페이지 언로드 시 연결 해제
-        window.addEventListener('beforeunload', disconnectSSE);
-    </script>
+    // 페이지 언로드 시 연결 해제
+    window.addEventListener('beforeunload', disconnectSSE);
+</script>
 </body>
 </html>

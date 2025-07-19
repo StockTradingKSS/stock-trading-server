@@ -17,7 +17,7 @@ public class StockSearchResponse {
     private String marketCode;            // 시장코드
     private String marketName;            // 시장명
     private String upName;                // 업종명
-    
+
     // 도메인 모델을 응답 DTO로 변환
     public static StockSearchResponse fromDomain(Stock stock) {
         return StockSearchResponse.builder()

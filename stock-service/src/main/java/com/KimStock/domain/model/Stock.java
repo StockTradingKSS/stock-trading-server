@@ -1,10 +1,8 @@
 package com.KimStock.domain.model;
 
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-
 
 @Builder
 @Getter
@@ -22,7 +20,5 @@ public class Stock {
     private String upSizeName;  // 규모명
     private String companyClassName; // 기업형태
     private String orderWarning; // 주문 경고
-    private boolean isNxtEnable; // 주문 경고
+    private boolean nxtEnable; // NXT 가능 여부
 }
-
-

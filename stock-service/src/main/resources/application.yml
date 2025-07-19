@@ -6,18 +6,38 @@ spring:
     name: transaction-service
   config:
     import: optional:file:.env[.properties]
-  r2dbc:
-    url: ${R2DBC_URL:r2dbc:postgresql://localhost:5432/stocktrading}
-    username: ${POSTGRES_USER:postgres}
-    password: ${POSTGRES_PASSWORD:postgres}
-    pool:
-      initial-size: 5
-      max-size: 20
-      max-idle-time: 30m
-      max-acquire-time: 10s
-      max-create-connection-time: 10s
+  
+  # DSQL 사용을 위한 JPA 설정
+  datasource:
+    url: # DSQL DataSource를 직접 사용하므로 비워둠
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    # Aurora DSQL Hibernate Dialect 사용
+    database-platform: software.amazon.dsql.hibernate.dialect.AuroraDSQLDialect
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        # DSQL 전용 설정
+        dialect: software.amazon.dsql.hibernate.dialect.AuroraDSQLDialect
+        # 스키마 설정
+        default_schema: stock_trading
+        # DSQL 최적화 설정
+        jdbc.batch_size: 20
+        order_inserts: true
+        order_updates: true
+        # 쿼리 로깅 설정 - 개발 시에만 필요
+        format_sql: false
+        use_sql_comments: false
+        # 성능 로깅 - 운영에서는 비활성화
+        generate_statistics: false
+        jdbc.batch_versioned_data: true
+    show-sql: false
+    open-in-view: false
+  
   liquibase:
-    enabled: false  # R2DBC는 Liquibase를 지원하지 않음
+    enabled: false
 
 springdoc:
   swagger-ui:
@@ -39,10 +59,36 @@ kiwoom:
   websocket:
     url: wss://api.kiwoom.com:10000/api/dostk/websocket
 
+# DSQL 설정
+app:
+  datasource:
+    dsql:
+      endpoint: ${DSQL_ENDPOINT:3iabuhgpuyweeglhfr73mskaoq.dsql.ap-northeast-2.on.aws}
+      user: ${DSQL_USER:admin}
+      database: ${DSQL_DATABASE:postgres}
+      region: ${DSQL_REGION:ap-northeast-2}
+  dsql:
+    token:
+      refresh-interval: 600000  # 10분마다 토큰 갱신
+
 env:
   file:
     directory: ./stock-service/
 
 logging:
   level:
-    org.springframework.r2dbc: ERROR
+    org.springframework.sql.init: WARN
+    com.KimStock.config.com.KimStock.adapter.out.persistence.config.DsqlConfig: INFO
+    com.KimStock.config.com.KimStock.adapter.out.persistence.config.DsqlExceptionOverride: INFO
+    # DSQL 관련 로깅
+    software.amazon.dsql: WARN
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN
+    # SQL 쿼리 로깅 - 필요시에만 DEBUG로 변경
+    org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql: WARN
+    org.hibernate.orm.jdbc.bind: WARN
+    # JPA 쿼리 로깅
+    org.springframework.orm.jpa: WARN
+    org.springframework.transaction: WARN
+    # 커스텀 로깅
+    com.KimStock.adapter.out.persistence: INFO
