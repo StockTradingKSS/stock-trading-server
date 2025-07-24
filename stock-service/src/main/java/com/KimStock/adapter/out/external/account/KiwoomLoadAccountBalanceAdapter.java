@@ -98,16 +98,30 @@ public class KiwoomLoadAccountBalanceAdapter implements LoadAccountBalancePort {
                     .collect(Collectors.toList());
 
             return AccountBalance.builder()
-                    .totalPurchaseAmount(Long.parseLong(totalPurchaseAmount))
-                    .totalEvaluationAmount(Long.parseLong(totalEvaluationAmount))
-                    .totalEvaluationProfitLoss(Long.parseLong(totalEvaluationProfitLoss))
-                    .totalProfitRate(Double.parseDouble(totalProfitRate))
-                    .estimatedDepositAsset(Long.parseLong(estimatedDepositAsset))
-                    .totalLoanAmount(Long.parseLong(totalLoanAmount))
-                    .totalCreditLoanAmount(Long.parseLong(totalCreditLoanAmount))
-                    .totalCreditLeaseAmount(Long.parseLong(totalCreditLeaseAmount))
+                    .totalPurchaseAmount(parseStringToLong(totalPurchaseAmount))
+                    .totalEvaluationAmount(parseStringToLong(totalEvaluationAmount))
+                    .totalEvaluationProfitLoss(parseStringToLong(totalEvaluationProfitLoss))
+                    .totalProfitRate(parseStringToDouble(totalProfitRate))
+                    .estimatedDepositAsset(parseStringToLong(estimatedDepositAsset))
+                    .totalLoanAmount(parseStringToLong(totalLoanAmount))
+                    .totalCreditLoanAmount(parseStringToLong(totalCreditLoanAmount))
+                    .totalCreditLeaseAmount(parseStringToLong(totalCreditLeaseAmount))
                     .holdingStocks(holdingStocks)
                     .build();
+        }
+
+        private static long parseStringToLong(String value) {
+            if (value == null || value.isEmpty()) {
+                return 0;
+            }
+            return Long.parseLong(value.replaceAll("[^0-9-]", ""));
+        }
+
+        private static double parseStringToDouble(String value) {
+            if (value == null || value.isEmpty()) {
+                return 0.0;
+            }
+            return Double.parseDouble(value.replaceAll("[^0-9.-]", ""));
         }
 
         public record StockHoldingResponse(
