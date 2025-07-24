@@ -38,3 +38,9 @@ out/
 /.env
 /*/.env
 /**/.env
+
+### Secret Files ###
+secretkey.properties
+*/secretkey.properties
+**/secretkey.properties
+stock-service.tar.gz
