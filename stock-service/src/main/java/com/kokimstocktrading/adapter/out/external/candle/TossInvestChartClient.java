@@ -95,7 +95,7 @@ public class TossInvestChartClient {
                 );
     }
 
-    public Mono<Object> loadCandles(String stockCode, CandleInterval interval, LocalDateTime from, Long count) {
+    public Mono<List<StockCandle>> loadCandles(String stockCode, CandleInterval interval, LocalDateTime from, Long count) {
 
         return loadCandlesRecursively(stockCode, interval, from, count, new ArrayList<>())
                 .doOnSuccess(candles -> log.info("Successfully loaded {} {} candles for stock {} from {} count {}",

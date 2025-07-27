@@ -14,7 +14,7 @@ public interface LoadStockCandlePort {
             LocalDateTime fromDateTime,
             LocalDateTime toDateTime);
 
-    Mono<Long> loadStockCandleListBy(
+    Mono<List<StockCandle>> loadStockCandleListBy(
             String stockCode,
             CandleInterval candleInterval,
             LocalDateTime fromDateTime,
