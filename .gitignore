@@ -44,3 +44,6 @@ secretkey.properties
 */secretkey.properties
 **/secretkey.properties
 stock-service.tar.gz
+stock-service/src/test/java/com/kokimstocktrading/CorrectBackpressureTest.java
+stock-service/src/test/java/com/kokimstocktrading/ReactiveSinksFluxTest.java
+stock-service/src/test/java/com/kokimstocktrading/RealBackpressureTest.java

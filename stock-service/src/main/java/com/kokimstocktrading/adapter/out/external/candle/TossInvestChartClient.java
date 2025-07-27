@@ -1,7 +1,7 @@
 package com.kokimstocktrading.adapter.out.external.candle;
 
-import com.kokimstocktrading.domain.candle.StockCandle;
 import com.kokimstocktrading.domain.candle.CandleInterval;
+import com.kokimstocktrading.domain.candle.StockCandle;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -95,6 +95,73 @@ public class TossInvestChartClient {
                 );
     }
 
+    public Mono<Object> loadCandles(String stockCode, CandleInterval interval, LocalDateTime from, Long count) {
+
+        return loadCandlesRecursively(stockCode, interval, from, count, new ArrayList<>())
+                .doOnSuccess(candles -> log.info("Successfully loaded {} {} candles for stock {} from {} count {}",
+                        candles.size(), interval, stockCode, from, count))
+                .doOnError(error -> log.error("Failed to load {} candles for stock {} from {} count {}: {}",
+                        interval, stockCode, from, count, error.getMessage()));
+    }
+
+    private Mono<List<StockCandle>> loadCandlesRecursively(String stockCode, CandleInterval interval,
+                                                           LocalDateTime from, Long count,
+                                                           List<StockCandle> accumulatedCandles) {
+        String timeFrame = getTimeFrame(interval);
+
+        return tossInvestWebClient.get()
+                .uri(uriBuilder -> buildUri(uriBuilder, stockCode, timeFrame, from))
+                .retrieve()
+                .bodyToMono(TossInvestChartResponse.class)
+                .flatMap(response -> {
+                            if (response == null || response.getResult() == null || response.getResult().getCandles() == null) {
+                                return Mono.just(accumulatedCandles);
+                            }
+
+                            List<StockCandle> currentCandles = convertToStockCandles(response, interval);
+
+                            // from(최신)부터 과거 방향으로 필터링 (from 이전 데이터만)
+                            List<StockCandle> filteredCandles = currentCandles.stream()
+                                    .filter(candle -> {
+                                        LocalDateTime candleTime = candle.getOpenTime();
+                                        return candleTime.isBefore(from) || candleTime.isEqual(from);
+                                    })
+                                    .toList();
+
+                            accumulatedCandles.addAll(filteredCandles);
+
+                            log.debug("Loaded {} candles, filtered to {} candles (total accumulated: {})",
+                                    currentCandles.size(), filteredCandles.size(), accumulatedCandles.size());
+
+                            // 목표 개수에 도달했는지 확인
+                            if (accumulatedCandles.size() >= count) {
+                                // 필요한 개수만큼만 자르기 (최신 데이터부터 count개)
+                                List<StockCandle> result = accumulatedCandles.stream()
+                                        .limit(count)
+                                        .toList();
+                                log.info("Target count reached. Total candles loaded: {}", result.size());
+                                return Mono.just(result);
+                            }
+
+                            // 다음 조회 날짜 확인
+                            LocalDateTime nextDateTime = response.getResult().getNextDateTime() != null
+                                    ? response.getResult().getNextDateTime().atZoneSameInstant(ZoneId.of("Asia/Seoul")).toLocalDateTime()
+                                    : null;
+
+                            // 종료 조건: nextDateTime이 null
+                            if (nextDateTime == null) {
+                                log.info("Reached end of data. Total candles loaded: {}", accumulatedCandles.size());
+                                return Mono.just(accumulatedCandles);
+                            }
+
+                            // 재귀 호출 - nextDateTime부터 계속 조회
+                            log.debug("Continuing with nextDateTime: {}, need {} more candles",
+                                    nextDateTime, count - accumulatedCandles.size());
+                            return loadCandlesRecursively(stockCode, interval, nextDateTime, count, accumulatedCandles);
+                        }
+                );
+    }
+
     private URI buildUri(UriBuilder uriBuilder, String stockCode, String timeFrame, LocalDateTime from) {
         String cleanStockCode = stockCode.trim();
         String baseUrl = uriBuilder.build().toString();
@@ -149,4 +216,6 @@ public class TossInvestChartClient {
                         .build())
                 .toList();
     }
+
+
 }

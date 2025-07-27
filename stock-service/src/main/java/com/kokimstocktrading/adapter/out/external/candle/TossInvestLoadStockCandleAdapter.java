@@ -26,4 +26,13 @@ public class TossInvestLoadStockCandleAdapter implements LoadStockCandlePort {
                     return Mono.just(List.of());
                 });
     }
+
+    @Override
+    public Mono<Long> loadStockCandleListBy(String stockCode, CandleInterval candleInterval, LocalDateTime fromDateTime, Long count) {
+        return tossInvestChartClient.loadCandles(stockCode, candleInterval, fromDateTime, count)
+                .onErrorResume(error -> {
+                    log.error("Failed to load chart data for stock {}: {}", stockCode, error.getMessage());
+                    return Mono.just(List.of());
+                });
+    }
 }
