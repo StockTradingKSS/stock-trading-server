@@ -14,6 +14,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 
 import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
@@ -148,13 +150,13 @@ public class MockRealTimeController {
                 .changeRate(String.format("%.2f", changeRate))
                 .askPrice(String.valueOf(askPrice))
                 .bidPrice(String.valueOf(bidPrice))
-                .tradingVolume(tradingVolume > 0 ? "+" + tradingVolume : String.valueOf(tradingVolume))
+                .tradingVolume("+" + tradingVolume)
                 .accumulatedVolume(String.valueOf(mockData.totalVolume))
                 .accumulatedAmount(String.valueOf(mockData.totalVolume * currentPrice / 1000))
                 .openPrice(String.valueOf(mockData.basePrice))
                 .highPrice(String.valueOf(Math.max(currentPrice, mockData.basePrice)))
                 .lowPrice(String.valueOf(Math.min(currentPrice, mockData.basePrice)))
-                .tradeTime(tradeTime)
+                .tradeTime(parseTradeTime(tradeTime))
                 .build();
     }
 
@@ -176,6 +178,26 @@ public class MockRealTimeController {
             this.currentPrice = basePrice;
             this.totalVolume = 0;
             this.updateCount = 0;
+        }
+    }
+
+    /**
+     * 체결시간 문자열(HHMMSS)을 LocalDateTime으로 변환
+     * @param tradeTimeStr 체결시간 (예: "161402")
+     * @return LocalDateTime (오늘 날짜 + 시분초)
+     */
+    private LocalDateTime parseTradeTime(String tradeTimeStr) {
+        if (tradeTimeStr == null || tradeTimeStr.length() != 6) {
+            return LocalDateTime.now(); // 기본값
+        }
+
+        try {
+            DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HHmmss");
+            LocalTime time = LocalTime.parse(tradeTimeStr, timeFormatter);
+            return LocalDateTime.of(LocalDate.now(), time);
+        } catch (Exception e) {
+            log.warn("체결시간 파싱 실패: {}", tradeTimeStr, e);
+            return LocalDateTime.now();
         }
     }
 }

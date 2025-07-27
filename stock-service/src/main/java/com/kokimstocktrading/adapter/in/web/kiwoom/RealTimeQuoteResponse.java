@@ -63,7 +63,7 @@ public record RealTimeQuoteResponse(
                 quote.openPrice(),
                 quote.highPrice(),
                 quote.lowPrice(),
-                quote.tradeTime()
+                quote.tradeTime().toString()
         );
     }
 }
