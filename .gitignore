@@ -48,3 +48,4 @@ stock-service/src/test/java/com/kokimstocktrading/CorrectBackpressureTest.java
 stock-service/src/test/java/com/kokimstocktrading/ReactiveSinksFluxTest.java
 stock-service/src/test/java/com/kokimstocktrading/RealBackpressureTest.java
 qodana.yaml
+stock-service/src/test/java/com/kokimstocktrading/ReactorFluxIntervalTest.java
