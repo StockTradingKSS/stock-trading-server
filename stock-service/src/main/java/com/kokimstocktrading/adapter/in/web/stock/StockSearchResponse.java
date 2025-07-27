@@ -1,6 +1,6 @@
 package com.kokimstocktrading.adapter.in.web.stock;
 
-import com.kokimstocktrading.domain.model.Stock;
+import com.kokimstocktrading.domain.stock.Stock;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

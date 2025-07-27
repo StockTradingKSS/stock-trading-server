@@ -1,6 +1,6 @@
 package com.kokimstocktrading.adapter.in.web.kiwoom;
 
-import com.kokimstocktrading.domain.model.RealTimeQuote;
+import com.kokimstocktrading.domain.realtime.RealTimeQuote;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 /**

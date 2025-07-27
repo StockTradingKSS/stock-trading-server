@@ -1,6 +1,6 @@
 package com.kokimstocktrading.adapter.in.web.kiwoom;
 
-import com.kokimstocktrading.application.port.out.SubscribeRealTimeQuotePort;
+import com.kokimstocktrading.application.realtime.out.SubscribeRealTimeQuotePort;
 import com.common.WebAdapter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

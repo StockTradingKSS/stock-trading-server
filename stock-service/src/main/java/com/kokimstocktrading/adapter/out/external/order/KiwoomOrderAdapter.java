@@ -1,10 +1,10 @@
 package com.kokimstocktrading.adapter.out.external.order;
 
-import com.kokimstocktrading.adapter.out.external.error.ClientErrorHandler;
+import com.kokimstocktrading.adapter.out.external.kiwoom.ClientErrorHandler;
 import com.kokimstocktrading.adapter.out.external.kiwoom.auth.KiwoomAuthAdapter;
-import com.kokimstocktrading.application.port.out.RequestStockOrderPort;
-import com.kokimstocktrading.domain.model.OrderResult;
-import com.kokimstocktrading.domain.model.type.TradeType;
+import com.kokimstocktrading.application.order.port.out.RequestStockOrderPort;
+import com.kokimstocktrading.domain.order.OrderResult;
+import com.kokimstocktrading.domain.order.TradeType;
 import com.common.ExternalSystemAdapter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.extern.slf4j.Slf4j;

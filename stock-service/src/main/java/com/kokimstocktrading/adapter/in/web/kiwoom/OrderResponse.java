@@ -1,6 +1,6 @@
 package com.kokimstocktrading.adapter.in.web.kiwoom;
 
-import com.kokimstocktrading.domain.model.OrderResult;
+import com.kokimstocktrading.domain.order.OrderResult;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 public record OrderResponse(

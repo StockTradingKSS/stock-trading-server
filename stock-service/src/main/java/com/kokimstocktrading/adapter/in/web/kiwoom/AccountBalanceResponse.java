@@ -1,7 +1,7 @@
 package com.kokimstocktrading.adapter.in.web.kiwoom;
 
-import com.kokimstocktrading.domain.model.AccountBalance;
-import com.kokimstocktrading.domain.model.HoldingStock;
+import com.kokimstocktrading.domain.account.AccountBalance;
+import com.kokimstocktrading.domain.account.HoldingStock;
 import lombok.Builder;
 
 import java.util.List;
@@ -21,14 +21,6 @@ public record AccountBalanceResponse(
 ) {
     @Builder
     public AccountBalanceResponse {
-        totalPurchaseAmount = Objects.requireNonNullElse(totalPurchaseAmount, 0L);
-        totalEvaluationAmount = Objects.requireNonNullElse(totalEvaluationAmount, 0L);
-        totalEvaluationProfitLoss = Objects.requireNonNullElse(totalEvaluationProfitLoss, 0L);
-        totalProfitRate = Objects.requireNonNullElse(totalProfitRate, 0.0);
-        estimatedDepositAsset = Objects.requireNonNullElse(estimatedDepositAsset, 0L);
-        totalLoanAmount = Objects.requireNonNullElse(totalLoanAmount, 0L);
-        totalCreditLoanAmount = Objects.requireNonNullElse(totalCreditLoanAmount, 0L);
-        totalCreditLeaseAmount = Objects.requireNonNullElse(totalCreditLeaseAmount, 0L);
         holdingStocks = Objects.requireNonNullElse(holdingStocks, List.of());
     }
 

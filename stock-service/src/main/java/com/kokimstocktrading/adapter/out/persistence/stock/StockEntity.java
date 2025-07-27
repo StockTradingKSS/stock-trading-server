@@ -1,6 +1,6 @@
 package com.kokimstocktrading.adapter.out.persistence.stock;
 
-import com.kokimstocktrading.domain.model.Stock;
+import com.kokimstocktrading.domain.stock.Stock;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

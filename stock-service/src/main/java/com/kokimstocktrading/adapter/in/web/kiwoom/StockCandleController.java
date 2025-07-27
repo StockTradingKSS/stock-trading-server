@@ -1,8 +1,8 @@
 package com.kokimstocktrading.adapter.in.web.kiwoom;
 
-import com.kokimstocktrading.application.port.out.LoadStockChartPort;
-import com.kokimstocktrading.domain.model.StockCandle;
-import com.kokimstocktrading.domain.model.type.CandleInterval;
+import com.kokimstocktrading.application.candle.port.out.LoadStockCandlePort;
+import com.kokimstocktrading.domain.candle.StockCandle;
+import com.kokimstocktrading.domain.candle.CandleInterval;
 import com.common.WebAdapter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -24,7 +24,7 @@ import java.util.List;
 @RestController
 public class StockCandleController {
 
-    private final LoadStockChartPort loadStockChartPort;
+    private final LoadStockCandlePort loadStockCandlePort;
 
     @GetMapping("/{stock-code}")
     @Operation(summary = "주식 캔들 조회", description = "주식 캔들 조회")
@@ -46,6 +46,6 @@ public class StockCandleController {
                     schema = @Schema(type = "string", format = "date-time")
             ) LocalDateTime toDateTime
     ) {
-        return loadStockChartPort.loadStockCandleListBy(stockCode, candleInterval, fromDateTime, toDateTime);
+        return loadStockCandlePort.loadStockCandleListBy(stockCode, candleInterval, fromDateTime, toDateTime);
     }
 }

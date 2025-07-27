@@ -3,6 +3,7 @@ package com.kokimstocktrading.adapter.out.external.kiwoom;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
@@ -22,6 +23,7 @@ public class KiwoomWebSocketClient extends WebSocketClient {
     private final Gson gson = new Gson();
     private boolean isConnected = false;
     private final CountDownLatch loginLatch = new CountDownLatch(1);
+    @Setter
     private FluxSink<Map<String, Object>> messageSink;
 
     // 현재 구독 중인 그룹 관리
@@ -31,10 +33,6 @@ public class KiwoomWebSocketClient extends WebSocketClient {
     public KiwoomWebSocketClient(URI serverUri, String accessToken) {
         super(serverUri);
         this.accessToken = accessToken;
-    }
-
-    public void setMessageSink(FluxSink<Map<String, Object>> sink) {
-        this.messageSink = sink;
     }
 
     @Override

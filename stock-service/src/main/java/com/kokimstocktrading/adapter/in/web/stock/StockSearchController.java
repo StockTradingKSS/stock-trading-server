@@ -1,6 +1,6 @@
 package com.kokimstocktrading.adapter.in.web.stock;
 
-import com.kokimstocktrading.application.port.in.SearchStockUseCase;
+import com.kokimstocktrading.application.stock.port.in.SearchStockUseCase;
 import com.common.WebAdapter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

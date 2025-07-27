@@ -1,6 +1,6 @@
 package com.kokimstocktrading.adapter.in.web.kiwoom;
 
-import com.kokimstocktrading.domain.model.Market;
+import com.kokimstocktrading.domain.market.Market;
 import lombok.Builder;
 
 import java.util.Objects;

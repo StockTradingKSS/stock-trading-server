@@ -2,7 +2,7 @@ package com.kokimstocktrading.adapter.in.web.stock;
 
 import com.kokimstocktrading.adapter.out.persistence.stock.StockEntity;
 import com.kokimstocktrading.adapter.out.persistence.stock.StockRepository;
-import com.kokimstocktrading.application.port.in.RefreshStockUseCase;
+import com.kokimstocktrading.application.stock.port.in.RefreshStockUseCase;
 import com.common.WebAdapter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

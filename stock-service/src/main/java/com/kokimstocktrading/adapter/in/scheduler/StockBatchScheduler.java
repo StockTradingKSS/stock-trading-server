@@ -1,6 +1,6 @@
 package com.kokimstocktrading.adapter.in.scheduler;
 
-import com.kokimstocktrading.application.port.in.RefreshStockUseCase;
+import com.kokimstocktrading.application.stock.port.in.RefreshStockUseCase;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;

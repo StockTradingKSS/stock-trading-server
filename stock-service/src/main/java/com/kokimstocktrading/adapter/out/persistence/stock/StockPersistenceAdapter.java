@@ -1,7 +1,7 @@
 package com.kokimstocktrading.adapter.out.persistence.stock;
 
-import com.kokimstocktrading.application.port.out.SaveStockListPort;
-import com.kokimstocktrading.domain.model.Stock;
+import com.kokimstocktrading.application.stock.port.out.SaveStockListPort;
+import com.kokimstocktrading.domain.stock.Stock;
 import com.common.PersistenceAdapter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

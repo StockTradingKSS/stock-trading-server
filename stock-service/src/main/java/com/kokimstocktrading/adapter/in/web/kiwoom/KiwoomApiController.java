@@ -1,9 +1,9 @@
 package com.kokimstocktrading.adapter.in.web.kiwoom;
 
-import com.kokimstocktrading.application.port.out.LoadAccountBalancePort;
-import com.kokimstocktrading.application.port.out.LoadMarketListPort;
-import com.kokimstocktrading.application.port.out.LoadStockListPort;
-import com.kokimstocktrading.domain.model.type.MarketType;
+import com.kokimstocktrading.application.account.port.out.LoadAccountBalancePort;
+import com.kokimstocktrading.application.market.port.out.LoadMarketListPort;
+import com.kokimstocktrading.application.stock.port.out.LoadStockListPort;
+import com.kokimstocktrading.domain.market.MarketType;
 import com.common.WebAdapter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

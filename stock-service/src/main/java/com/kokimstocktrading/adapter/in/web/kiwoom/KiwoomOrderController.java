@@ -1,7 +1,7 @@
 package com.kokimstocktrading.adapter.in.web.kiwoom;
 
-import com.kokimstocktrading.application.port.out.RequestStockOrderPort;
-import com.kokimstocktrading.domain.model.type.TradeType;
+import com.kokimstocktrading.application.order.port.out.RequestStockOrderPort;
+import com.kokimstocktrading.domain.order.TradeType;
 import com.common.WebAdapter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

@@ -1,10 +1,10 @@
 package com.kokimstocktrading.adapter.out.external.stock;
 
-import com.kokimstocktrading.adapter.out.external.error.ClientErrorHandler;
+import com.kokimstocktrading.adapter.out.external.kiwoom.ClientErrorHandler;
 import com.kokimstocktrading.adapter.out.external.kiwoom.auth.KiwoomAuthAdapter;
-import com.kokimstocktrading.application.port.out.LoadStockListPort;
-import com.kokimstocktrading.domain.model.Stock;
-import com.kokimstocktrading.domain.model.type.MarketType;
+import com.kokimstocktrading.application.stock.port.out.LoadStockListPort;
+import com.kokimstocktrading.domain.stock.Stock;
+import com.kokimstocktrading.domain.market.MarketType;
 import com.common.ExternalSystemAdapter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
@@ -95,7 +95,7 @@ public class KiwoomLoadStockListAdapter implements LoadStockListPort {
 
         public static StockInfoRequest of(MarketType marketType) {
             // 0:코스피,10:코스닥,3:ELW,8:ETF,30:K-OTC,50:코넥스,5:신주인수권,4:뮤추얼펀드,6:리츠,9:하이일드
-            String mrkt_tp = "0";
+            String mrkt_tp;
 
             switch (marketType) {
                 case KOSPI -> mrkt_tp = "0";
