@@ -22,7 +22,7 @@ public class MonitorPriceService {
     private final Map<String, List<PriceCondition>> stockConditions = new ConcurrentHashMap<>();
     
     // 조건 ID로 빠른 검색을 위한 맵 (조건ID -> 조건 객체)
-    private final Map<Long, PriceCondition> conditionById = new ConcurrentHashMap<>();
+    private final Map<UUID, PriceCondition> conditionById = new ConcurrentHashMap<>();
     
     // 모니터링 구독 관리
     private final Map<String, Disposable> monitoringSubscriptions = new ConcurrentHashMap<>();
@@ -70,7 +70,7 @@ public class MonitorPriceService {
     /**
      * 조건 ID로 조건 삭제
      */
-    public boolean removePriceCondition(Long conditionId) {
+    public boolean removePriceCondition(UUID conditionId) {
         PriceCondition condition = conditionById.remove(conditionId);
         if (condition == null) {
             log.warn("존재하지 않는 조건 ID: {}", conditionId);
@@ -119,7 +119,7 @@ public class MonitorPriceService {
     /**
      * 조건 ID로 조건 조회
      */
-    public Optional<PriceCondition> getCondition(Long conditionId) {
+    public Optional<PriceCondition> getCondition(UUID conditionId) {
         return Optional.ofNullable(conditionById.get(conditionId));
     }
 

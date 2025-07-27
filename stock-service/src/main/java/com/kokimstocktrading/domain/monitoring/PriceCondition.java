@@ -1,25 +1,17 @@
 package com.kokimstocktrading.domain.monitoring;
 
-import lombok.Getter;
-
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.UUID;
 
 /**
  * 가격 조건 도메인 모델
  */
 public class PriceCondition {
-    private static final AtomicLong ID_GENERATOR = new AtomicLong(0);
-
-    // Getters
-    @Getter
-    private final Long id;
-    @Getter
+    
+    private final UUID id;
     private final String stockCode;
-    @Getter
     private final Long targetPrice;
     private final Runnable callback;
-    @Getter
     private final String description;
 
     public PriceCondition(String stockCode, Long targetPrice, Runnable callback) {
@@ -37,11 +29,11 @@ public class PriceCondition {
             throw new IllegalArgumentException("콜백은 필수입니다");
         }
 
-        this.id = ID_GENERATOR.incrementAndGet();
+        this.id = UUID.randomUUID();
         this.stockCode = stockCode;
         this.targetPrice = targetPrice;
         this.callback = callback;
-        this.description = description != null ? description :
+        this.description = description != null ? description : 
             String.format("%s %d원 도달", stockCode, targetPrice);
     }
 
@@ -64,6 +56,23 @@ public class PriceCondition {
         }
     }
 
+    // Getters
+    public UUID getId() {
+        return id;
+    }
+
+    public String getStockCode() {
+        return stockCode;
+    }
+
+    public Long getTargetPrice() {
+        return targetPrice;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -79,7 +88,7 @@ public class PriceCondition {
 
     @Override
     public String toString() {
-        return String.format("PriceCondition{id=%d, stockCode='%s', targetPrice=%d, description='%s'}",
+        return String.format("PriceCondition{id=%s, stockCode='%s', targetPrice=%d, description='%s'}", 
                 id, stockCode, targetPrice, description);
     }
 }

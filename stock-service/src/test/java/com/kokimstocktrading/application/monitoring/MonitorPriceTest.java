@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -65,6 +66,7 @@ public class MonitorPriceTest {
         //then
         assertThat(registered).isNotNull();
         assertThat(registered.getId()).isNotNull();
+        assertThat(registered.getId()).isInstanceOf(UUID.class);
         assertThat(registered.getStockCode()).isEqualTo("005930");
         assertThat(registered.getTargetPrice()).isEqualTo(76000L);
         assertThat(registered.getDescription()).isEqualTo("삼성전자 목표가 달성");
