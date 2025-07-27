@@ -1,6 +1,7 @@
 package com.kokimstocktrading.application.monitoring;
 
 import com.kokimstocktrading.application.realtime.out.SubscribeRealTimeQuotePort;
+import com.kokimstocktrading.domain.monitoring.PriceCondition;
 import com.kokimstocktrading.domain.realtime.RealTimeQuote;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -8,8 +9,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
@@ -18,40 +18,164 @@ import java.util.concurrent.ConcurrentHashMap;
 public class MonitorPriceService {
     private final SubscribeRealTimeQuotePort subscribeRealTimeQuotePort;
     
-    // 가격 조건 저장 (종목코드 -> 조건 정보)
-    private final Map<String, PriceCondition> priceConditions = new ConcurrentHashMap<>();
+    // 종목별 가격 조건 리스트 저장 (종목코드 -> 조건 리스트)
+    private final Map<String, List<PriceCondition>> stockConditions = new ConcurrentHashMap<>();
+    
+    // 조건 ID로 빠른 검색을 위한 맵 (조건ID -> 조건 객체)
+    private final Map<Long, PriceCondition> conditionById = new ConcurrentHashMap<>();
     
     // 모니터링 구독 관리
     private final Map<String, Disposable> monitoringSubscriptions = new ConcurrentHashMap<>();
 
     /**
      * 가격 조건 등록
-     * @param stockCode 종목코드
-     * @param targetPrice 목표가격
-     * @param callback 조건 만족 시 실행할 콜백
+     * @param condition 가격 조건 도메인 모델
+     * @return 등록된 조건 (ID 포함)
      */
-    public void registerPriceCondition(String stockCode, Long targetPrice, Runnable callback) {
-        PriceCondition condition = new PriceCondition(targetPrice, callback);
-        priceConditions.put(stockCode, condition);
-        log.info("가격 조건 등록: 종목={}, 목표가격={}", stockCode, targetPrice);
+    public PriceCondition registerPriceCondition(PriceCondition condition) {
+        String stockCode = condition.getStockCode();
+        
+        stockConditions.computeIfAbsent(stockCode, k -> new ArrayList<>()).add(condition);
+        conditionById.put(condition.getId(), condition);
+        
+        log.info("가격 조건 등록: {}", condition);
+        return condition;
+    }
+
+    /**
+     * 편의 메서드: 간단한 조건 등록
+     */
+    public PriceCondition registerPriceCondition(String stockCode, Long targetPrice, Runnable callback) {
+        PriceCondition condition = new PriceCondition(stockCode, targetPrice, callback);
+        return registerPriceCondition(condition);
+    }
+
+    /**
+     * 편의 메서드: 설명과 함께 조건 등록
+     */
+    public PriceCondition registerPriceCondition(String stockCode, Long targetPrice, 
+                                                Runnable callback, String description) {
+        PriceCondition condition = new PriceCondition(stockCode, targetPrice, callback, description);
+        return registerPriceCondition(condition);
+    }
+
+    /**
+     * 편의 메서드: 기본 로깅 콜백으로 조건 등록
+     */
+    public PriceCondition registerPriceCondition(String stockCode, Long targetPrice) {
+        Runnable defaultCallback = () -> log.info("가격 조건 달성: 종목={}, 목표가격={}", stockCode, targetPrice);
+        return registerPriceCondition(stockCode, targetPrice, defaultCallback);
+    }
+
+    /**
+     * 조건 ID로 조건 삭제
+     */
+    public boolean removePriceCondition(Long conditionId) {
+        PriceCondition condition = conditionById.remove(conditionId);
+        if (condition == null) {
+            log.warn("존재하지 않는 조건 ID: {}", conditionId);
+            return false;
+        }
+
+        String stockCode = condition.getStockCode();
+        List<PriceCondition> conditions = stockConditions.get(stockCode);
+        
+        if (conditions != null) {
+            boolean removed = conditions.remove(condition);
+            if (removed) {
+                log.info("가격 조건 삭제: {}", condition);
+                
+                // 조건이 모두 삭제되면 해당 종목 모니터링 중지
+                if (conditions.isEmpty()) {
+                    stockConditions.remove(stockCode);
+                    stopMonitoring(stockCode);
+                }
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    /**
+     * 종목의 모든 조건 삭제
+     */
+    public int removeAllConditions(String stockCode) {
+        List<PriceCondition> conditions = stockConditions.remove(stockCode);
+        if (conditions == null || conditions.isEmpty()) {
+            return 0;
+        }
+
+        // ID 맵에서도 제거
+        for (PriceCondition condition : conditions) {
+            conditionById.remove(condition.getId());
+        }
+
+        stopMonitoring(stockCode);
+        log.info("종목 {} 모든 조건 삭제: {}개", stockCode, conditions.size());
+        return conditions.size();
+    }
+
+    /**
+     * 조건 ID로 조건 조회
+     */
+    public Optional<PriceCondition> getCondition(Long conditionId) {
+        return Optional.ofNullable(conditionById.get(conditionId));
+    }
+
+    /**
+     * 종목별 조건 리스트 조회
+     */
+    public List<PriceCondition> getConditions(String stockCode) {
+        List<PriceCondition> conditions = stockConditions.get(stockCode);
+        return conditions != null ? new ArrayList<>(conditions) : new ArrayList<>();
+    }
+
+    /**
+     * 모든 조건 조회
+     */
+    public List<PriceCondition> getAllConditions() {
+        return new ArrayList<>(conditionById.values());
+    }
+
+    /**
+     * 종목별 등록된 조건 개수 조회
+     */
+    public int getConditionCount(String stockCode) {
+        List<PriceCondition> conditions = stockConditions.get(stockCode);
+        return conditions != null ? conditions.size() : 0;
+    }
+
+    /**
+     * 전체 등록된 조건 개수 조회
+     */
+    public int getTotalConditionCount() {
+        return conditionById.size();
+    }
+
+    /**
+     * 모니터링 중인 종목 리스트 조회
+     */
+    public Set<String> getMonitoringStocks() {
+        return new HashSet<>(stockConditions.keySet());
     }
 
     /**
      * 모니터링 시작
      */
     public void startMonitoring() {
-        if (priceConditions.isEmpty()) {
+        if (stockConditions.isEmpty()) {
             log.warn("등록된 가격 조건이 없습니다.");
             return;
         }
 
-        List<String> stockCodes = List.copyOf(priceConditions.keySet());
-        log.info("가격 모니터링 시작: 대상 종목={}", stockCodes);
+        List<String> stockCodes = List.copyOf(stockConditions.keySet());
+        log.info("가격 모니터링 시작: 대상 종목={}, 총 조건 수={}", stockCodes, getTotalConditionCount());
 
         Flux<RealTimeQuote> realTimeQuoteFlux = subscribeRealTimeQuotePort.subscribeStockQuote(stockCodes);
         
         Disposable subscription = realTimeQuoteFlux
-                .doOnNext(this::checkPriceCondition)
+                .doOnNext(this::checkPriceConditions)
                 .doOnError(error -> log.error("가격 모니터링 중 오류 발생", error))
                 .subscribe();
 
@@ -63,18 +187,19 @@ public class MonitorPriceService {
      * 개별 종목 모니터링 시작
      */
     public void startMonitoring(String stockCode) {
-        if (!priceConditions.containsKey(stockCode)) {
+        if (!stockConditions.containsKey(stockCode)) {
             log.warn("종목 {}에 대한 가격 조건이 등록되지 않았습니다.", stockCode);
             return;
         }
 
-        log.info("개별 가격 모니터링 시작: 종목={}", stockCode);
+        int conditionCount = getConditionCount(stockCode);
+        log.info("개별 가격 모니터링 시작: 종목={}, 조건 수={}", stockCode, conditionCount);
 
         Flux<RealTimeQuote> realTimeQuoteFlux = subscribeRealTimeQuotePort.subscribeStockQuote(List.of(stockCode));
         
         Disposable subscription = realTimeQuoteFlux
                 .filter(quote -> stockCode.equals(quote.item()))
-                .doOnNext(this::checkPriceCondition)
+                .doOnNext(this::checkPriceConditions)
                 .doOnError(error -> log.error("종목 {} 가격 모니터링 중 오류 발생", stockCode, error))
                 .subscribe();
 
@@ -82,29 +207,52 @@ public class MonitorPriceService {
     }
 
     /**
-     * 가격 조건 체크
+     * 가격 조건들 체크 (여러 조건 처리)
      */
-    private void checkPriceCondition(RealTimeQuote quote) {
+    private void checkPriceConditions(RealTimeQuote quote) {
         String stockCode = quote.item();
-        PriceCondition condition = priceConditions.get(stockCode);
+        List<PriceCondition> conditions = stockConditions.get(stockCode);
         
-        if (condition == null) {
+        if (conditions == null || conditions.isEmpty()) {
             return;
         }
 
         try {
             double currentPrice = Double.parseDouble(quote.currentPrice());
             
-            if (currentPrice >= condition.targetPrice()) {
-                log.info("가격 조건 달성! 종목={}, 현재가={}, 목표가={}", 
-                    stockCode, currentPrice, condition.targetPrice());
-                
-                // 콜백 실행
-                condition.callback().run();
-                
-                // 조건 달성 후 해당 종목 모니터링 중지
-                stopMonitoring(stockCode);
+            // 달성된 조건들을 수집
+            List<PriceCondition> achievedConditions = new ArrayList<>();
+            
+            for (PriceCondition condition : conditions) {
+                if (condition.isAchieved(currentPrice)) {
+                    log.info("가격 조건 달성! 조건={}, 현재가={}", condition, currentPrice);
+                    
+                    // 콜백 실행
+                    condition.executeCallback();
+                    
+                    achievedConditions.add(condition);
+                }
             }
+            
+            // 달성된 조건들 제거
+            if (!achievedConditions.isEmpty()) {
+                conditions.removeAll(achievedConditions);
+                
+                // ID 맵에서도 제거
+                for (PriceCondition condition : achievedConditions) {
+                    conditionById.remove(condition.getId());
+                }
+                
+                log.info("종목 {} - {}개 조건 달성 후 제거, 남은 조건: {}개", 
+                    stockCode, achievedConditions.size(), conditions.size());
+                
+                // 모든 조건이 달성되면 해당 종목 모니터링 중지
+                if (conditions.isEmpty()) {
+                    stockConditions.remove(stockCode);
+                    stopMonitoring(stockCode);
+                }
+            }
+            
         } catch (NumberFormatException e) {
             log.warn("가격 파싱 실패: 종목={}, 가격={}", stockCode, quote.currentPrice());
         }
@@ -120,8 +268,8 @@ public class MonitorPriceService {
             log.info("종목 {} 모니터링 중지", stockCode);
         }
         
-        // 조건도 제거
-        priceConditions.remove(stockCode);
+        // 조건들도 제거
+        removeAllConditions(stockCode);
     }
 
     /**
@@ -135,12 +283,8 @@ public class MonitorPriceService {
         });
         
         monitoringSubscriptions.clear();
-        priceConditions.clear();
+        stockConditions.clear();
+        conditionById.clear();
         log.info("전체 가격 모니터링 중지");
     }
-
-    /**
-     * 가격 조건 정보
-     */
-    private record PriceCondition(Long targetPrice, Runnable callback) {}
 }
