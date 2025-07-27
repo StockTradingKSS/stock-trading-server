@@ -61,9 +61,13 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'io.projectreactor:reactor-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testImplementation 'org.projectlombok:lombok'
-    testAnnotationProcessor'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
+    
+    // Mockito agent for Java 21+
+    testRuntimeOnly 'org.mockito:mockito-subclass'
 }
 
 docker {
@@ -76,4 +80,8 @@ docker {
 
 tasks.named('test') {
     useJUnitPlatform()
+    jvmArgs('-XX:+EnableDynamicAgentLoading')
+    
+    // Mockito agent 설정
+    systemProperty 'mockito.mock.maker', 'subclass'
 }
