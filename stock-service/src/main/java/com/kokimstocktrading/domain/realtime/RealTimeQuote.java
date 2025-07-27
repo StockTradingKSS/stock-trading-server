@@ -1,6 +1,7 @@
 package com.kokimstocktrading.domain.realtime;
 
 import lombok.Builder;
+import java.time.LocalDateTime;
 
 /**
  *  주식 시장에서 "quote"는 주로 주식의 현재 가격 정보를 의미합니다.
@@ -23,7 +24,7 @@ public record RealTimeQuote(
         String openPrice,         // 시가
         String highPrice,         // 고가
         String lowPrice,          // 저가
-        String tradeTime          // 체결시간
+        LocalDateTime tradeTime   // 체결시간
 ) {
     // 값이 정상인지 확인하는 유틸리티 메서드
     public boolean hasValidPrices() {

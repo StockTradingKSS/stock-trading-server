@@ -15,6 +15,10 @@ import reactor.core.publisher.Sinks;
 import reactor.util.context.Context;
 
 import java.net.URI;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -174,7 +178,10 @@ public class KiwoomRealTimeQuoteAdapter implements SubscribeRealTimeQuotePort, D
                 String openPrice = (String) values.get("16");      // 시가
                 String highPrice = (String) values.get("17");      // 고가
                 String lowPrice = (String) values.get("18");       // 저가
-                String tradeTime = (String) values.get("20");      // 체결시간
+                String tradeTimeStr = (String) values.get("20");   // 체결시간 (HHMMSS)
+                
+                // 체결시간을 LocalDateTime으로 변환
+                LocalDateTime tradeTime = parseTradeTime(tradeTimeStr);
 
                 RealTimeQuote quote = RealTimeQuote.builder()
                         .type(type)
@@ -285,6 +292,26 @@ public class KiwoomRealTimeQuoteAdapter implements SubscribeRealTimeQuotePort, D
             }
         } catch (Exception e) {
             log.error("WebSocket 연결 종료 중 오류 발생", e);
+        }
+    }
+    
+    /**
+     * 체결시간 문자열(HHMMSS)을 LocalDateTime으로 변환
+     * @param tradeTimeStr 체결시간 (예: "161402")
+     * @return LocalDateTime (오늘 날짜 + 시분초)
+     */
+    private LocalDateTime parseTradeTime(String tradeTimeStr) {
+        if (tradeTimeStr == null || tradeTimeStr.length() != 6) {
+            return LocalDateTime.now(); // 기본값
+        }
+        
+        try {
+            DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HHmmss");
+            LocalTime time = LocalTime.parse(tradeTimeStr, timeFormatter);
+            return LocalDateTime.of(LocalDate.now(), time);
+        } catch (Exception e) {
+            log.warn("체결시간 파싱 실패: {}", tradeTimeStr, e);
+            return LocalDateTime.now();
         }
     }
 }

@@ -9,7 +9,6 @@ import reactor.core.publisher.Sinks;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
@@ -19,7 +18,6 @@ public class MockRealTimeQuoteAdapter implements SubscribeRealTimeQuotePort {
     
     private final Map<String, StockPriceInfo> stockPriceMap = new ConcurrentHashMap<>();
     private final Map<List<String>, Sinks.Many<RealTimeQuote>> subscriptionMap = new ConcurrentHashMap<>();
-    private final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HHmmss");
 
     // 주식 가격 정보를 관리하는 내부 클래스
     private static class StockPriceInfo {
@@ -150,7 +148,7 @@ public class MockRealTimeQuoteAdapter implements SubscribeRealTimeQuotePort {
                 .openPrice(priceInfo.openPrice.toString())
                 .highPrice(priceInfo.highPrice.toString())
                 .lowPrice(priceInfo.lowPrice.toString())
-                .tradeTime(LocalDateTime.now().format(timeFormatter))
+                .tradeTime(LocalDateTime.now())
                 .build();
     }
     
