@@ -1,4 +1,4 @@
-package com.kokimstocktrading.adapter.out.external.kiwoom;
+package com.kokimstocktrading.adapter.out.external.config.kiwoom;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;

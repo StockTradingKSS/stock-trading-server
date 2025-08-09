@@ -1,7 +1,7 @@
 package com.kokimstocktrading.adapter.in.web.kiwoom;
 
-import com.kokimstocktrading.adapter.out.external.kiwoom.auth.KiwoomAuthAdapter;
-import com.kokimstocktrading.adapter.out.external.kiwoom.auth.OAuthTokenResponse;
+import com.kokimstocktrading.adapter.out.external.config.kiwoom.auth.KiwoomAuthAdapter;
+import com.kokimstocktrading.adapter.out.external.config.kiwoom.auth.OAuthTokenResponse;
 import com.common.WebAdapter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

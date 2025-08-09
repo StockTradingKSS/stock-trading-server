@@ -1,7 +1,7 @@
 package com.kokimstocktrading.adapter.out.external.market;
 
-import com.kokimstocktrading.adapter.out.external.kiwoom.ClientErrorHandler;
-import com.kokimstocktrading.adapter.out.external.kiwoom.auth.KiwoomAuthAdapter;
+import com.kokimstocktrading.adapter.out.external.config.kiwoom.ClientErrorHandler;
+import com.kokimstocktrading.adapter.out.external.config.kiwoom.auth.KiwoomAuthAdapter;
 import com.kokimstocktrading.application.market.port.out.LoadMarketListPort;
 import com.kokimstocktrading.domain.market.Market;
 import com.kokimstocktrading.domain.market.MarketType;

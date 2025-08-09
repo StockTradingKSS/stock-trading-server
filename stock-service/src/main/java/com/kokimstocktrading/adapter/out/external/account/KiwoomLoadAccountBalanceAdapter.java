@@ -1,7 +1,7 @@
 package com.kokimstocktrading.adapter.out.external.account;
 
-import com.kokimstocktrading.adapter.out.external.kiwoom.ClientErrorHandler;
-import com.kokimstocktrading.adapter.out.external.kiwoom.auth.KiwoomAuthAdapter;
+import com.kokimstocktrading.adapter.out.external.config.kiwoom.ClientErrorHandler;
+import com.kokimstocktrading.adapter.out.external.config.kiwoom.auth.KiwoomAuthAdapter;
 import com.kokimstocktrading.application.account.port.out.LoadAccountBalancePort;
 import com.kokimstocktrading.domain.account.AccountBalance;
 import com.kokimstocktrading.domain.account.HoldingStock;

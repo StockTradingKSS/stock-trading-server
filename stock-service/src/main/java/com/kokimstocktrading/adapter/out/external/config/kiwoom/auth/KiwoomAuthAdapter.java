@@ -1,4 +1,4 @@
-package com.kokimstocktrading.adapter.out.external.kiwoom.auth;
+package com.kokimstocktrading.adapter.out.external.config.kiwoom.auth;
 
 import com.common.ExternalSystemAdapter;
 import jakarta.annotation.PostConstruct;

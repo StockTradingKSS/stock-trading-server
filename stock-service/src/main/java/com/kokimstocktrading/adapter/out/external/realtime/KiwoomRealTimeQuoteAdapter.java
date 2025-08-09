@@ -1,7 +1,7 @@
 package com.kokimstocktrading.adapter.out.external.realtime;
 
-import com.kokimstocktrading.adapter.out.external.kiwoom.KiwoomWebSocketClient;
-import com.kokimstocktrading.adapter.out.external.kiwoom.auth.KiwoomAuthAdapter;
+import com.kokimstocktrading.adapter.out.external.config.kiwoom.KiwoomWebSocketClient;
+import com.kokimstocktrading.adapter.out.external.config.kiwoom.auth.KiwoomAuthAdapter;
 import com.kokimstocktrading.application.realtime.out.SubscribeRealTimeQuotePort;
 import com.kokimstocktrading.domain.realtime.RealTimeQuote;
 import com.common.ExternalSystemAdapter;
