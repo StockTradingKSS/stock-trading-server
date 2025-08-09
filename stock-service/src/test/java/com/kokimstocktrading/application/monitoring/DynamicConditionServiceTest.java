@@ -1,9 +1,12 @@
 package com.kokimstocktrading.application.monitoring;
 
 import com.kokimstocktrading.application.candle.port.out.LoadStockCandlePort;
+import com.kokimstocktrading.application.monitoring.calculator.MovingAverageTouchPriceCalculator;
+import com.kokimstocktrading.application.monitoring.calculator.TrendLineTouchPriceCalculator;
 import com.kokimstocktrading.domain.candle.CandleInterval;
 import com.kokimstocktrading.domain.candle.StockCandle;
 import com.kokimstocktrading.domain.monitoring.MovingAverageCondition;
+import com.kokimstocktrading.domain.monitoring.TrendLineCondition;
 import lombok.extern.slf4j.Slf4j;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,14 +40,18 @@ class DynamicConditionServiceTest {
     @Mock
     private MonitorPriceService monitorPriceService;
 
+    private TrendLineTouchPriceCalculator trendLineTouchPriceCalculator;
     private MovingAverageTouchPriceCalculator movingAverageTouchPriceCalculator;
     private DynamicConditionService dynamicConditionService;
 
     @BeforeEach
     void setUp() {
+        trendLineTouchPriceCalculator = new TrendLineTouchPriceCalculator(loadStockCandlePort);
         movingAverageTouchPriceCalculator = new MovingAverageTouchPriceCalculator(loadStockCandlePort);
-        dynamicConditionService = new DynamicConditionService(movingAverageTouchPriceCalculator, monitorPriceService);
+        dynamicConditionService = new DynamicConditionService(movingAverageTouchPriceCalculator, trendLineTouchPriceCalculator, monitorPriceService);
     }
+
+    // ================================ 이평선 테스트 ================================
 
     @DisplayName("이평선 조건을 등록할 수 있다.")
     @Test
@@ -57,7 +64,7 @@ class DynamicConditionServiceTest {
 
         // Mock 캔들 데이터 생성 (20개, 평균 75000원)
         List<StockCandle> mockCandles = createMockCandles(period, BigDecimal.valueOf(75000));
-        when(loadStockCandlePort.loadStockCandleListBy(eq(stockCode), eq(interval), any(), eq((long) period)))
+        when(loadStockCandlePort.loadStockCandleListBy(eq(stockCode), eq(interval), any(LocalDateTime.class), eq((long) period)))
                 .thenReturn(Mono.just(mockCandles));
 
         // Mock PriceCondition 등록
@@ -87,7 +94,7 @@ class DynamicConditionServiceTest {
         int period = 5;
         CandleInterval interval = CandleInterval.DAY;
 
-        // 명확한 평균값을 가진 캔들 데이터 (70000, 75000, 80000, 85000 / 4 =  80000)
+        // 명확한 평균값을 가진 캔들 데이터 (87000, 83000, 77000, 73000 / 4 = 80000)
         List<StockCandle> mockCandles = List.of(
                 createMockCandle(BigDecimal.valueOf(90000)), // 가장 최신 캔들(현재 캔들)은 수식에 사용되지 않음.
                 createMockCandle(BigDecimal.valueOf(87000)),
@@ -96,7 +103,7 @@ class DynamicConditionServiceTest {
                 createMockCandle(BigDecimal.valueOf(73000))  // 가장 오래된
         );
 
-        when(loadStockCandlePort.loadStockCandleListBy(eq(stockCode), eq(interval), any(), eq((long) period)))
+        when(loadStockCandlePort.loadStockCandleListBy(eq(stockCode), eq(interval), any(LocalDateTime.class), eq((long) period)))
                 .thenReturn(Mono.just(mockCandles));
 
         //when
@@ -127,7 +134,7 @@ class DynamicConditionServiceTest {
         // 두 번째 호출: 76000원 이평선 (업데이트됨)
         List<StockCandle> updatedCandles = createMockCandles(period, BigDecimal.valueOf(76000));
 
-        when(loadStockCandlePort.loadStockCandleListBy(eq(stockCode), eq(interval), any(), eq((long) period)))
+        when(loadStockCandlePort.loadStockCandleListBy(eq(stockCode), eq(interval), any(LocalDateTime.class), eq((long) period)))
                 .thenReturn(Mono.just(initialCandles))
                 .thenReturn(Mono.just(updatedCandles));
 
@@ -168,7 +175,7 @@ class DynamicConditionServiceTest {
         CandleInterval interval = CandleInterval.DAY;
 
         List<StockCandle> mockCandles = createMockCandles(period, BigDecimal.valueOf(75000));
-        when(loadStockCandlePort.loadStockCandleListBy(eq(stockCode), any(), any(), eq((long) period)))
+        when(loadStockCandlePort.loadStockCandleListBy(eq(stockCode), eq(interval), any(LocalDateTime.class), eq((long) period)))
                 .thenReturn(Mono.just(mockCandles));
         when(monitorPriceService.registerPriceCondition(any()))
                 .thenAnswer(invocation -> invocation.getArgument(0));
@@ -197,9 +204,9 @@ class DynamicConditionServiceTest {
         // 50일 이평선용 데이터 (50개)
         List<StockCandle> mockCandles50 = createMockCandles(50, BigDecimal.valueOf(85000));
         
-        when(loadStockCandlePort.loadStockCandleListBy(eq("005930"), any(), any(), eq(20L)))
+        when(loadStockCandlePort.loadStockCandleListBy(eq("005930"), any(CandleInterval.class), any(LocalDateTime.class), eq(20L)))
                 .thenReturn(Mono.just(mockCandles20));
-        when(loadStockCandlePort.loadStockCandleListBy(eq("000660"), any(), any(), eq(50L)))
+        when(loadStockCandlePort.loadStockCandleListBy(eq("000660"), any(CandleInterval.class), any(LocalDateTime.class), eq(50L)))
                 .thenReturn(Mono.just(mockCandles50));
         
         when(monitorPriceService.registerPriceCondition(any()))
@@ -217,6 +224,260 @@ class DynamicConditionServiceTest {
 
         //then
         assertThat(dynamicConditionService.getMovingAverageConditionCount()).isEqualTo(0);
+    }
+
+    // ================================ 추세선 테스트 ================================
+
+    @DisplayName("추세선 조건을 등록할 수 있다.")
+    @Test
+    public void canRegisterTrendLineCondition() {
+        //given
+        String stockCode = "005930";
+        LocalDateTime toDate = LocalDateTime.of(2024, 1, 1, 0, 0);
+        BigDecimal slope = BigDecimal.valueOf(100);
+        CandleInterval interval = CandleInterval.DAY;
+        AtomicBoolean triggered = new AtomicBoolean(false);
+
+        // Mock 캔들 데이터 생성 (5개 봉, 시작가 50000원)
+        List<StockCandle> mockCandles = List.of(
+                createMockCandle(BigDecimal.valueOf(50000)), // 시작점 (첫 번째 캔들)
+                createMockCandle(BigDecimal.valueOf(50500)),
+                createMockCandle(BigDecimal.valueOf(51000)),
+                createMockCandle(BigDecimal.valueOf(51500)),
+                createMockCandle(BigDecimal.valueOf(52000))  // 마지막
+        );
+
+        when(loadStockCandlePort.loadStockCandleListBy(eq(stockCode), eq(interval), any(LocalDateTime.class), eq(toDate)))
+                .thenReturn(Mono.just(mockCandles));
+
+        // Mock PriceCondition 등록
+        when(monitorPriceService.registerPriceCondition(any()))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        //when
+        TrendLineCondition condition = dynamicConditionService
+                .registerTrendLineCondition(stockCode, toDate, slope, interval, 
+                        () -> triggered.compareAndSet(false, true))
+                .block();
+
+        //then
+        assertThat(condition).isNotNull();
+        assertThat(condition.getStockCode()).isEqualTo(stockCode);
+        assertThat(condition.getToDate()).isEqualTo(toDate);
+        assertThat(condition.getSlope()).isEqualTo(slope);
+        assertThat(condition.getInterval()).isEqualTo(interval);
+        assertThat(condition.getCurrentPriceConditionId()).isNotNull();
+        assertThat(dynamicConditionService.getTrendLineConditionCount()).isEqualTo(1);
+    }
+
+    @DisplayName("추세선 터치 가격 계산이 정확하게 수행된다.")
+    @Test
+    public void trendLineTouchPriceCalculationIsAccurate() {
+        //given
+        String stockCode = "005930";
+        LocalDateTime toDate = LocalDateTime.of(2024, 1, 1, 0, 0);
+        BigDecimal slope = BigDecimal.valueOf(100); // 봉당 100원씩 상승
+        CandleInterval interval = CandleInterval.DAY;
+
+        // 5개 캔들 = 4개 간격, 시작가 50000원 (첫 번째 캔들)
+        // 현재가격 = 50000 + (4 * 100) = 50400원
+        List<StockCandle> mockCandles = List.of(
+                createMockCandle(BigDecimal.valueOf(50000)), // 시작점 (첫 번째 캔들)
+                createMockCandle(BigDecimal.valueOf(50500)),
+                createMockCandle(BigDecimal.valueOf(51000)),
+                createMockCandle(BigDecimal.valueOf(51500)),
+                createMockCandle(BigDecimal.valueOf(52000))  // 마지막
+        );
+
+        when(loadStockCandlePort.loadStockCandleListBy(eq(stockCode), eq(interval), any(LocalDateTime.class), eq(toDate)))
+                .thenReturn(Mono.just(mockCandles));
+
+        //when
+        Long trendLinePrice = trendLineTouchPriceCalculator
+                .calculateTouchPrice(stockCode, toDate, slope, interval)
+                .block();
+
+        //then
+        // 50000 + (4 * 100) = 50400
+        assertThat(trendLinePrice).isEqualTo(50400L);
+    }
+
+    @DisplayName("주기적으로 추세선 조건이 업데이트된다.")
+    @Test
+    public void trendLineConditionUpdatedPeriodically() {
+        //given
+        String stockCode = "005930";
+        LocalDateTime toDate = LocalDateTime.of(2024, 1, 1, 0, 0);
+        BigDecimal slope = BigDecimal.valueOf(100);
+        CandleInterval interval = CandleInterval.MINUTE;
+        AtomicInteger updateCount = new AtomicInteger(0);
+
+        // 테스트용 빠른 업데이트 간격 설정 (100ms)
+        dynamicConditionService.setUpdateIntervalProvider(
+                candleInterval -> Duration.ofMillis(100)
+        );
+
+        // 첫 번째 호출: 50400원 추세선
+        List<StockCandle> initialCandles = List.of(
+                createMockCandle(BigDecimal.valueOf(50000)), // 시작점
+                createMockCandle(BigDecimal.valueOf(50500)),
+                createMockCandle(BigDecimal.valueOf(51000)),
+                createMockCandle(BigDecimal.valueOf(51500)),
+                createMockCandle(BigDecimal.valueOf(52000))
+        );
+        
+        // 두 번째 호출: 50500원 추세선 (추가 캔들로 인해 변경)
+        List<StockCandle> updatedCandles = List.of(
+                createMockCandle(BigDecimal.valueOf(50000)), // 시작점
+                createMockCandle(BigDecimal.valueOf(50500)),
+                createMockCandle(BigDecimal.valueOf(51000)),
+                createMockCandle(BigDecimal.valueOf(51500)),
+                createMockCandle(BigDecimal.valueOf(52000)),
+                createMockCandle(BigDecimal.valueOf(52500))
+        );
+
+        when(loadStockCandlePort.loadStockCandleListBy(eq(stockCode), eq(interval), any(LocalDateTime.class), eq(toDate)))
+                .thenReturn(Mono.just(initialCandles))
+                .thenReturn(Mono.just(updatedCandles));
+
+        // Mock PriceCondition 등록/삭제
+        when(monitorPriceService.registerPriceCondition(any()))
+                .thenAnswer(invocation -> {
+                    updateCount.incrementAndGet();
+                    return invocation.getArgument(0);
+                });
+        when(monitorPriceService.removePriceCondition(any())).thenReturn(true);
+
+        //when
+        TrendLineCondition condition = dynamicConditionService
+                .registerTrendLineCondition(stockCode, toDate, slope, interval, () -> {})
+                .block();
+
+        //then
+        assertThat(condition).isNotNull();
+        
+        // 초기 등록으로 1번 호출
+        assertThat(updateCount.get()).isEqualTo(1);
+
+        // 200ms 후 업데이트 확인 (100ms 간격이므로 충분)
+        Awaitility.await()
+                .atMost(Duration.ofMillis(500))
+                .until(() -> updateCount.get() >= 2);
+
+        assertThat(updateCount.get()).isGreaterThanOrEqualTo(2);
+        log.info("추세선 조건 업데이트 횟수: {}", updateCount.get());
+    }
+
+    @DisplayName("추세선 조건을 삭제할 수 있다.")
+    @Test
+    public void canRemoveTrendLineCondition() {
+        //given
+        String stockCode = "005930";
+        LocalDateTime toDate = LocalDateTime.of(2024, 1, 1, 0, 0);
+        BigDecimal slope = BigDecimal.valueOf(100);
+        CandleInterval interval = CandleInterval.DAY;
+
+        List<StockCandle> mockCandles = List.of(
+                createMockCandle(BigDecimal.valueOf(50000)), // 시작점
+                createMockCandle(BigDecimal.valueOf(50500)),
+                createMockCandle(BigDecimal.valueOf(51000)),
+                createMockCandle(BigDecimal.valueOf(51500)),
+                createMockCandle(BigDecimal.valueOf(52000))
+        );
+
+        when(loadStockCandlePort.loadStockCandleListBy(eq(stockCode), eq(interval), any(LocalDateTime.class), eq(toDate)))
+                .thenReturn(Mono.just(mockCandles));
+        when(monitorPriceService.registerPriceCondition(any()))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(monitorPriceService.removePriceCondition(any())).thenReturn(true);
+
+        TrendLineCondition condition = dynamicConditionService
+                .registerTrendLineCondition(stockCode, toDate, slope, interval, () -> {})
+                .block();
+
+        assertThat(dynamicConditionService.getTrendLineConditionCount()).isEqualTo(1);
+
+        //when
+        boolean removed = dynamicConditionService.removeTrendLineCondition(condition.getId());
+
+        //then
+        assertThat(removed).isTrue();
+        assertThat(dynamicConditionService.getTrendLineConditionCount()).isEqualTo(0);
+    }
+
+    @DisplayName("모든 추세선 조건을 삭제할 수 있다.")
+    @Test
+    public void canRemoveAllTrendLineConditions() {
+        //given
+        List<StockCandle> mockCandles = List.of(
+                createMockCandle(BigDecimal.valueOf(50000)), // 시작점
+                createMockCandle(BigDecimal.valueOf(50500)),
+                createMockCandle(BigDecimal.valueOf(51000)),
+                createMockCandle(BigDecimal.valueOf(51500)),
+                createMockCandle(BigDecimal.valueOf(52000))
+        );
+        
+        when(loadStockCandlePort.loadStockCandleListBy(anyString(), any(CandleInterval.class), any(LocalDateTime.class), any(LocalDateTime.class)))
+                .thenReturn(Mono.just(mockCandles));
+        when(monitorPriceService.registerPriceCondition(any()))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(monitorPriceService.removePriceCondition(any())).thenReturn(true);
+
+        // 여러 추세선 조건 등록
+        dynamicConditionService.registerTrendLineCondition(
+                "005930", LocalDateTime.of(2024, 1, 1, 0, 0), 
+                BigDecimal.valueOf(100), CandleInterval.DAY, () -> {}).block();
+        dynamicConditionService.registerTrendLineCondition(
+                "000660", LocalDateTime.of(2024, 2, 1, 0, 0), 
+                BigDecimal.valueOf(50), CandleInterval.MINUTE, () -> {}).block();
+
+        assertThat(dynamicConditionService.getTrendLineConditionCount()).isEqualTo(2);
+
+        //when
+        dynamicConditionService.removeAllTrendLineConditions();
+
+        //then
+        assertThat(dynamicConditionService.getTrendLineConditionCount()).isEqualTo(0);
+    }
+
+    @DisplayName("모든 조건(이평선 + 추세선)을 삭제할 수 있다.")
+    @Test
+    public void canRemoveAllConditions() {
+        //given
+        List<StockCandle> mockCandles20 = createMockCandles(20, BigDecimal.valueOf(75000));
+        List<StockCandle> mockCandles5 = List.of(
+                createMockCandle(BigDecimal.valueOf(50000)), // 시작점
+                createMockCandle(BigDecimal.valueOf(50500)),
+                createMockCandle(BigDecimal.valueOf(51000)),
+                createMockCandle(BigDecimal.valueOf(51500)),
+                createMockCandle(BigDecimal.valueOf(52000))
+        );
+        
+        when(loadStockCandlePort.loadStockCandleListBy(eq("005930"), any(CandleInterval.class), any(LocalDateTime.class), eq(20L)))
+                .thenReturn(Mono.just(mockCandles20));
+        when(loadStockCandlePort.loadStockCandleListBy(eq("000660"), any(CandleInterval.class), any(LocalDateTime.class), any(LocalDateTime.class)))
+                .thenReturn(Mono.just(mockCandles5));
+        when(monitorPriceService.registerPriceCondition(any()))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        when(monitorPriceService.removePriceCondition(any())).thenReturn(true);
+
+        // 이평선 조건 등록
+        dynamicConditionService.registerMovingAverageCondition("005930", 20, CandleInterval.DAY, () -> {}).block();
+        
+        // 추세선 조건 등록
+        dynamicConditionService.registerTrendLineCondition(
+                "000660", LocalDateTime.of(2024, 1, 1, 0, 0), 
+                BigDecimal.valueOf(100), CandleInterval.DAY, () -> {}).block();
+
+        assertThat(dynamicConditionService.getMovingAverageConditionCount()).isEqualTo(1);
+        assertThat(dynamicConditionService.getTrendLineConditionCount()).isEqualTo(1);
+
+        //when
+        dynamicConditionService.removeAllConditions();
+
+        //then
+        assertThat(dynamicConditionService.getMovingAverageConditionCount()).isEqualTo(0);
+        assertThat(dynamicConditionService.getTrendLineConditionCount()).isEqualTo(0);
     }
 
     // Helper methods
