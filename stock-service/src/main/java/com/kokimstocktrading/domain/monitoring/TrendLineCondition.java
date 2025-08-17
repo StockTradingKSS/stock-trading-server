@@ -20,6 +20,7 @@ public class TrendLineCondition {
     private final LocalDateTime toDate;        // 추세선 끝점 날짜
     private final BigDecimal slope;            // 추세선 기울기
     private final CandleInterval interval;     // 캔들 간격 (분, 일, 주, 월, 년)
+    private final TouchDirection touchDirection;     // 캔들 간격 (분, 일, 주, 월, 년)
     private final Runnable callback;
     private final String description;
     
@@ -27,13 +28,14 @@ public class TrendLineCondition {
     @Setter
     private UUID currentPriceConditionId;
 
-    public TrendLineCondition(String stockCode, LocalDateTime toDate, BigDecimal slope, 
-                             CandleInterval interval, Runnable callback) {
-        this(stockCode, toDate, slope, interval, callback, null);
+    public TrendLineCondition(String stockCode, LocalDateTime toDate, BigDecimal slope,
+                              CandleInterval interval, Runnable callback, TouchDirection touchDirection) {
+        this(stockCode, toDate, slope, interval, touchDirection, callback, null);
     }
 
-    public TrendLineCondition(String stockCode, LocalDateTime toDate, BigDecimal slope, 
-                             CandleInterval interval, Runnable callback, String description) {
+    public TrendLineCondition(String stockCode, LocalDateTime toDate, BigDecimal slope,
+                              CandleInterval interval, TouchDirection touchDirection, Runnable callback, String description) {
+        this.touchDirection = touchDirection;
         if (stockCode == null || stockCode.trim().isEmpty()) {
             throw new IllegalArgumentException("종목코드는 필수입니다");
         }
@@ -71,7 +73,7 @@ public class TrendLineCondition {
         String conditionDescription = String.format("%s 추세선(기울기:%.2f, %d원) 도달", 
             stockCode, slope, trendLinePrice);
         
-        return new PriceCondition(stockCode, trendLinePrice, callback, conditionDescription);
+        return new PriceCondition(id, stockCode, trendLinePrice, touchDirection, callback, conditionDescription);
     }
 
     @Override

@@ -11,14 +11,15 @@ public class PriceCondition {
     private final UUID id;
     private final String stockCode;
     private final Long targetPrice;
+    private final TouchDirection touchDirection;
     private final Runnable callback;
     private final String description;
 
-    public PriceCondition(String stockCode, Long targetPrice, Runnable callback) {
-        this(stockCode, targetPrice, callback, null);
+    public PriceCondition(UUID id, String stockCode, Long targetPrice, Runnable callback, TouchDirection touchDirection) {
+        this(id, stockCode, targetPrice, touchDirection, callback, null);
     }
 
-    public PriceCondition(String stockCode, Long targetPrice, Runnable callback, String description) {
+    public PriceCondition(UUID id, String stockCode, Long targetPrice, TouchDirection touchDirection, Runnable callback, String description) {
         if (stockCode == null || stockCode.trim().isEmpty()) {
             throw new IllegalArgumentException("종목코드는 필수입니다");
         }
@@ -29,7 +30,8 @@ public class PriceCondition {
             throw new IllegalArgumentException("콜백은 필수입니다");
         }
 
-        this.id = UUID.randomUUID();
+        this.id = id;
+        this.touchDirection = touchDirection;
         this.stockCode = stockCode;
         this.targetPrice = targetPrice;
         this.callback = callback;
@@ -41,7 +43,13 @@ public class PriceCondition {
      * 현재 가격이 목표 가격에 도달했는지 확인
      */
     public boolean isAchieved(double currentPrice) {
-        return currentPrice >= targetPrice;
+        if(touchDirection == TouchDirection.FROM_BELOW){
+            return currentPrice >= targetPrice;
+        }
+        if(touchDirection == TouchDirection.FROM_ABOVE){
+            return currentPrice <= targetPrice;
+        }
+        throw new IllegalArgumentException("지원하지 않는 TouchDirection 입니다");
     }
 
     /**

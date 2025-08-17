@@ -18,19 +18,16 @@ public class MovingAverageCondition {
     private final String stockCode;
     private final int period;              // 이평선 기간 (예: 20일)
     private final CandleInterval interval; // 캔들 간격 (분, 일, 주, 월, 년)
+    private final TouchDirection touchDirection;
     private final Runnable callback;
     private final String description;
     
-    // 현재 활성화된 PriceCondition ID (업데이트 시 삭제용)
-    @Setter
-    private UUID currentPriceConditionId;
-
-    public MovingAverageCondition(String stockCode, int period, CandleInterval interval, Runnable callback) {
-        this(stockCode, period, interval, callback, null);
+    public MovingAverageCondition(UUID uuid, String stockCode, int period, CandleInterval interval, Runnable callback, TouchDirection touchDirection) {
+        this(uuid, stockCode, period, interval, touchDirection, callback, null);
     }
 
-    public MovingAverageCondition(String stockCode, int period, CandleInterval interval, 
-                                 Runnable callback, String description) {
+    public MovingAverageCondition(UUID uuid, String stockCode, int period, CandleInterval interval, TouchDirection touchDirection,
+                                  Runnable callback, String description) {
         if (stockCode == null || stockCode.trim().isEmpty()) {
             throw new IllegalArgumentException("종목코드는 필수입니다");
         }
@@ -43,8 +40,12 @@ public class MovingAverageCondition {
         if (callback == null) {
             throw new IllegalArgumentException("콜백은 필수입니다");
         }
+        if(touchDirection == null){
+            throw new IllegalArgumentException("터치 방향은 필수입니다");
+        }
 
-        this.id = UUID.randomUUID();
+        this.touchDirection = touchDirection;
+        this.id = uuid;
         this.stockCode = stockCode;
         this.period = period;
         this.interval = interval;
@@ -64,7 +65,7 @@ public class MovingAverageCondition {
         String conditionDescription = String.format("%s %d%s 이평선(%d원) 도달", 
             stockCode, period, interval.getDisplayName(), movingAveragePrice);
         
-        return new PriceCondition(stockCode, movingAveragePrice, callback, conditionDescription);
+        return new PriceCondition(id, stockCode, movingAveragePrice, touchDirection, callback, conditionDescription);
     }
 
     @Override

@@ -5,7 +5,9 @@ import com.kokimstocktrading.application.monitoring.calculator.TrendLineTouchPri
 import com.kokimstocktrading.domain.candle.CandleInterval;
 import com.kokimstocktrading.domain.monitoring.MovingAverageCondition;
 import com.kokimstocktrading.domain.monitoring.PriceCondition;
+import com.kokimstocktrading.domain.monitoring.TouchDirection;
 import com.kokimstocktrading.domain.monitoring.TrendLineCondition;
+import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -17,9 +19,12 @@ import reactor.core.publisher.Mono;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Function;
 
 /**
@@ -33,41 +38,72 @@ public class DynamicConditionService {
     private final MovingAverageTouchPriceCalculator movingAverageTouchPriceCalculator;
     private final TrendLineTouchPriceCalculator trendLineTouchPriceCalculator;
     private final MonitorPriceService monitorPriceService;
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(4);
 
     // 등록된 이평선 조건들 (조건 ID -> 이평선 조건)
     private final Map<UUID, MovingAverageCondition> movingAverageConditions = new ConcurrentHashMap<>();
-    
+
     // 등록된 추세선 조건들 (조건 ID -> 추세선 조건)
     private final Map<UUID, TrendLineCondition> trendLineConditions = new ConcurrentHashMap<>();
-    
+
     // 주기적 업데이트 스케줄러 (조건 ID -> Disposable)
     private final Map<UUID, Disposable> updateSchedulers = new ConcurrentHashMap<>();
 
     /**
-     * -- SETTER --
-     *  업데이트 간격 제공자 설정
+     * 업데이트 간격 제공자 설정
      */
     @Setter
     private Function<CandleInterval, Duration> updateIntervalProvider = this::getUpdateInterval;
-
+    
     /**
-     * 이평선 조건 등록 및 주기적 업데이트 시작
+     * 초기 지연 계산 제공자 설정 (테스트용)
      */
-    public Mono<MovingAverageCondition> registerMovingAverageCondition(
-            String stockCode, int period, CandleInterval interval, Runnable callback) {
+    @Setter
+    private Function<Duration, Long> initialDelayProvider = this::calculateInitialDelay;
+
+    @PreDestroy
+    public void destroy() {
+        // 먼저 모든 스케줄러 중지
+        updateSchedulers.values().forEach(disposable -> {
+            if (disposable != null && !disposable.isDisposed()) {
+                disposable.dispose();
+            }
+        });
+        updateSchedulers.clear();
         
-        return registerMovingAverageCondition(stockCode, period, interval, callback, null);
+        // 모든 조건 제거
+        movingAverageConditions.clear();
+        trendLineConditions.clear();
+        
+        // 스케줄러 종료
+        try {
+            scheduler.shutdown();
+            if (!scheduler.awaitTermination(5, java.util.concurrent.TimeUnit.SECONDS)) {
+                scheduler.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            scheduler.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
+        
+        log.info("DynamicConditionService 종료 완료");
     }
 
     /**
      * 이평선 조건 등록 (설명 포함)
      */
     public Mono<MovingAverageCondition> registerMovingAverageCondition(
-            String stockCode, int period, CandleInterval interval, Runnable callback, String description) {
-        
+            String stockCode, int period, CandleInterval interval, TouchDirection touchDirection, Runnable callback, String description) {
+        UUID uuid = UUID.randomUUID();
         MovingAverageCondition condition = new MovingAverageCondition(
-                stockCode, period, interval, callback, description);
-        
+                uuid, stockCode, period, interval, touchDirection, () -> {
+            callback.run();
+            Disposable disposable = updateSchedulers.remove(uuid);
+            if (disposable != null) {
+                disposable.dispose();
+            }
+        }, description);
+
         return initializeMovingAverageCondition(condition)
                 .doOnSuccess(initializedCondition -> {
                     movingAverageConditions.put(condition.getId(), condition);
@@ -82,15 +118,14 @@ public class DynamicConditionService {
      */
     private Mono<MovingAverageCondition> initializeMovingAverageCondition(MovingAverageCondition condition) {
         return movingAverageTouchPriceCalculator.calculateTouchPrice(
-                condition.getStockCode(), condition.getPeriod(), condition.getInterval())
+                        condition.getStockCode(), condition.getPeriod(), condition.getInterval())
                 .map(movingAveragePrice -> {
                     PriceCondition priceCondition = condition.createPriceCondition(movingAveragePrice);
                     PriceCondition registered = monitorPriceService.registerPriceCondition(priceCondition);
-                    condition.setCurrentPriceConditionId(registered.getId());
-                    
-                    log.info("초기 이평선 가격 조건 생성: 종목={}, 이평선가격={}, 조건ID={}", 
+
+                    log.info("초기 이평선 가격 조건 생성: 종목={}, 이평선가격={}, 조건ID={}",
                             condition.getStockCode(), movingAveragePrice, registered.getId());
-                    
+
                     return condition;
                 });
     }
@@ -101,17 +136,47 @@ public class DynamicConditionService {
     private void startPeriodicUpdate(MovingAverageCondition condition) {
         Duration updateInterval = updateIntervalProvider.apply(condition.getInterval());
         
-        Disposable scheduler = Flux.interval(updateInterval)
-                .flatMap(tick -> updateMovingAverageCondition(condition))
-                .doOnError(error -> log.error("이평선 조건 업데이트 중 오류: {}", condition, error))
-                .onErrorContinue((error, obj) -> {
-                    // 오류가 발생해도 업데이트 계속 시도
-                    log.warn("이평선 업데이트 오류, 계속 진행: {}", error.getMessage());
-                })
+        // 정각 실행을 위한 초기 지연 계산
+        long initialDelayMs = initialDelayProvider.apply(updateInterval);
+        long periodMs = updateInterval.toMillis();
+
+        Disposable scheduler = Flux.defer(() ->
+                        Mono.fromRunnable(() ->
+                                updateMovingAverageCondition(condition)
+                                        .doOnError(error -> log.error("이평선 조건 업데이트 중 오류: {}", condition, error))
+                                        .onErrorContinue((error, obj) -> log.warn("이평선 업데이트 오류, 계속 진행: {}", error.getMessage()))
+                                        .subscribe()
+                        )
+                ).repeat()
+                .delayElements(Duration.ofMillis(periodMs))
+                .delaySubscription(Duration.ofMillis(initialDelayMs))
+                .subscribeOn(reactor.core.scheduler.Schedulers.fromExecutor(this.scheduler))
                 .subscribe();
-        
+
         updateSchedulers.put(condition.getId(), scheduler);
-        log.info("이평선 주기적 업데이트 시작: 조건={}, 간격={}", condition.getId(), updateInterval);
+        log.info("이평선 주기적 업데이트 시작: 조건={}, 간격={}, 첫 실행까지={}ms", 
+            condition.getId(), updateInterval, initialDelayMs);
+    }
+
+    /**
+     * 정각 실행을 위한 초기 지연 계산
+     */
+    private long calculateInitialDelay(Duration interval) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime nextExecution;
+        
+        if (interval.equals(Duration.ofMinutes(1))) {
+            // 1분 간격: 다음 분의 00초
+            nextExecution = now.plusMinutes(1).truncatedTo(ChronoUnit.MINUTES);
+        } else if (interval.equals(Duration.ofHours(1))) {
+            // 1시간 간격: 다음 시간의 00분 00초
+            nextExecution = now.plusHours(1).truncatedTo(ChronoUnit.HOURS);
+        } else {
+            // 기타 간격: 현재 시각부터 해당 간격만큼 후
+            nextExecution = now.plus(interval);
+        }
+        
+        return Duration.between(now, nextExecution).toMillis();
     }
 
     /**
@@ -119,10 +184,10 @@ public class DynamicConditionService {
      */
     private Mono<Void> updateMovingAverageCondition(MovingAverageCondition condition) {
         return movingAverageTouchPriceCalculator.calculateTouchPrice(
-                condition.getStockCode(), condition.getPeriod(), condition.getInterval())
+                        condition.getStockCode(), condition.getPeriod(), condition.getInterval())
                 .flatMap(newMovingAveragePrice -> {
                     // 기존 PriceCondition 삭제
-                    UUID oldConditionId = condition.getCurrentPriceConditionId();
+                    UUID oldConditionId = condition.getId();
                     if (oldConditionId != null) {
                         boolean removed = monitorPriceService.removePriceCondition(oldConditionId);
                         log.debug("기존 이평선 조건 삭제: 조건ID={}, 성공={}", oldConditionId, removed);
@@ -131,9 +196,8 @@ public class DynamicConditionService {
                     // 새로운 PriceCondition 생성
                     PriceCondition newPriceCondition = condition.createPriceCondition(newMovingAveragePrice);
                     PriceCondition registered = monitorPriceService.registerPriceCondition(newPriceCondition);
-                    condition.setCurrentPriceConditionId(registered.getId());
 
-                    log.info("이평선 조건 업데이트: 종목={}, 새 이평선가격={}, 새 조건ID={}", 
+                    log.info("이평선 조건 업데이트: 종목={}, 새 이평선가격={}, 새 조건ID={}",
                             condition.getStockCode(), newMovingAveragePrice, registered.getId());
 
                     return Mono.<Void>empty();
@@ -174,7 +238,7 @@ public class DynamicConditionService {
         }
 
         // 현재 활성화된 PriceCondition 삭제
-        UUID currentPriceConditionId = condition.getCurrentPriceConditionId();
+        UUID currentPriceConditionId = condition.getId();
         if (currentPriceConditionId != null) {
             monitorPriceService.removePriceCondition(currentPriceConditionId);
         }
@@ -205,20 +269,20 @@ public class DynamicConditionService {
      */
     public Mono<TrendLineCondition> registerTrendLineCondition(
             String stockCode, LocalDateTime toDate, BigDecimal slope, CandleInterval interval, Runnable callback) {
-        
-        return registerTrendLineCondition(stockCode, toDate, slope, interval, callback, null);
+
+        return registerTrendLineCondition(stockCode, toDate, slope, interval, TouchDirection.FROM_ABOVE, callback, null);
     }
 
     /**
      * 추세선 조건 등록 (설명 포함)
      */
     public Mono<TrendLineCondition> registerTrendLineCondition(
-            String stockCode, LocalDateTime toDate, BigDecimal slope, 
-            CandleInterval interval, Runnable callback, String description) {
-        
+            String stockCode, LocalDateTime toDate, BigDecimal slope,
+            CandleInterval interval, TouchDirection touchDirection, Runnable callback, String description) {
+
         TrendLineCondition condition = new TrendLineCondition(
-                stockCode, toDate, slope, interval, callback, description);
-        
+                stockCode, toDate, slope, interval, touchDirection, callback, description);
+
         return initializeTrendLineCondition(condition)
                 .doOnSuccess(initializedCondition -> {
                     trendLineConditions.put(condition.getId(), condition);
@@ -233,15 +297,15 @@ public class DynamicConditionService {
      */
     private Mono<TrendLineCondition> initializeTrendLineCondition(TrendLineCondition condition) {
         return trendLineTouchPriceCalculator.calculateTouchPrice(
-                condition.getStockCode(), condition.getToDate(), condition.getSlope(), condition.getInterval())
+                        condition.getStockCode(), condition.getToDate(), condition.getSlope(), condition.getInterval())
                 .map(trendLinePrice -> {
                     PriceCondition priceCondition = condition.createPriceCondition(trendLinePrice);
                     PriceCondition registered = monitorPriceService.registerPriceCondition(priceCondition);
                     condition.setCurrentPriceConditionId(registered.getId());
-                    
-                    log.info("초기 추세선 가격 조건 생성: 종목={}, 추세선가격={}, 조건ID={}", 
+
+                    log.info("초기 추세선 가격 조건 생성: 종목={}, 추세선가격={}, 조건ID={}",
                             condition.getStockCode(), trendLinePrice, registered.getId());
-                    
+
                     return condition;
                 });
     }
@@ -252,17 +316,26 @@ public class DynamicConditionService {
     private void startTrendLinePeriodicUpdate(TrendLineCondition condition) {
         Duration updateInterval = updateIntervalProvider.apply(condition.getInterval());
         
-        Disposable scheduler = Flux.interval(updateInterval)
-                .flatMap(tick -> updateTrendLineCondition(condition))
-                .doOnError(error -> log.error("추세선 조건 업데이트 중 오류: {}", condition, error))
-                .onErrorContinue((error, obj) -> {
-                    // 오류가 발생해도 업데이트 계속 시도
-                    log.warn("추세선 업데이트 오류, 계속 진행: {}", error.getMessage());
-                })
+        // 정각 실행을 위한 초기 지연 계산
+        long initialDelayMs = initialDelayProvider.apply(updateInterval);
+        long periodMs = updateInterval.toMillis();
+
+        Disposable scheduler = Flux.defer(() ->
+                        Mono.fromRunnable(() ->
+                                updateTrendLineCondition(condition)
+                                        .doOnError(error -> log.error("추세선 조건 업데이트 중 오류: {}", condition, error))
+                                        .onErrorContinue((error, obj) -> log.warn("추세선 업데이트 오류, 계속 진행: {}", error.getMessage()))
+                                        .subscribe()
+                        )
+                ).repeat()
+                .delayElements(Duration.ofMillis(periodMs))
+                .delaySubscription(Duration.ofMillis(initialDelayMs))
+                .subscribeOn(reactor.core.scheduler.Schedulers.fromExecutor(this.scheduler))
                 .subscribe();
-        
+
         updateSchedulers.put(condition.getId(), scheduler);
-        log.info("추세선 주기적 업데이트 시작: 조건={}, 간격={}", condition.getId(), updateInterval);
+        log.info("추세선 주기적 업데이트 시작: 조건={}, 간격={}, 첫 실행까지={}ms", 
+            condition.getId(), updateInterval, initialDelayMs);
     }
 
     /**
@@ -270,7 +343,7 @@ public class DynamicConditionService {
      */
     private Mono<Void> updateTrendLineCondition(TrendLineCondition condition) {
         return trendLineTouchPriceCalculator.calculateTouchPrice(
-                condition.getStockCode(), condition.getToDate(), condition.getSlope(), condition.getInterval())
+                        condition.getStockCode(), condition.getToDate(), condition.getSlope(), condition.getInterval())
                 .flatMap(newTrendLinePrice -> {
                     // 기존 PriceCondition 삭제
                     UUID oldConditionId = condition.getCurrentPriceConditionId();
@@ -284,7 +357,7 @@ public class DynamicConditionService {
                     PriceCondition registered = monitorPriceService.registerPriceCondition(newPriceCondition);
                     condition.setCurrentPriceConditionId(registered.getId());
 
-                    log.info("추세선 조건 업데이트: 종목={}, 새 추세선가격={}, 새 조건ID={}", 
+                    log.info("추세선 조건 업데이트: 종목={}, 새 추세선가격={}, 새 조건ID={}",
                             condition.getStockCode(), newTrendLinePrice, registered.getId());
 
                     return Mono.<Void>empty();

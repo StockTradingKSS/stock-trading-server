@@ -2,6 +2,7 @@ package com.kokimstocktrading.application.monitoring;
 
 import com.kokimstocktrading.application.realtime.out.SubscribeRealTimeQuotePort;
 import com.kokimstocktrading.domain.monitoring.PriceCondition;
+import com.kokimstocktrading.domain.monitoring.TouchDirection;
 import com.kokimstocktrading.domain.realtime.RealTimeQuote;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,32 +40,8 @@ public class MonitorPriceService {
         conditionById.put(condition.getId(), condition);
         
         log.info("가격 조건 등록: {}", condition);
+        startMonitoring(condition.getStockCode());
         return condition;
-    }
-
-    /**
-     * 편의 메서드: 간단한 조건 등록
-     */
-    public PriceCondition registerPriceCondition(String stockCode, Long targetPrice, Runnable callback) {
-        PriceCondition condition = new PriceCondition(stockCode, targetPrice, callback);
-        return registerPriceCondition(condition);
-    }
-
-    /**
-     * 편의 메서드: 설명과 함께 조건 등록
-     */
-    public PriceCondition registerPriceCondition(String stockCode, Long targetPrice, 
-                                                Runnable callback, String description) {
-        PriceCondition condition = new PriceCondition(stockCode, targetPrice, callback, description);
-        return registerPriceCondition(condition);
-    }
-
-    /**
-     * 편의 메서드: 기본 로깅 콜백으로 조건 등록
-     */
-    public PriceCondition registerPriceCondition(String stockCode, Long targetPrice) {
-        Runnable defaultCallback = () -> log.info("가격 조건 달성: 종목={}, 목표가격={}", stockCode, targetPrice);
-        return registerPriceCondition(stockCode, targetPrice, defaultCallback);
     }
 
     /**

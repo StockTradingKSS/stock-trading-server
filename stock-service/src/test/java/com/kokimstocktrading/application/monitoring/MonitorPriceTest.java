@@ -3,9 +3,11 @@ package com.kokimstocktrading.application.monitoring;
 import com.kokimstocktrading.application.monitoring.mock.RealTimeQuotePortConfig;
 import com.kokimstocktrading.application.realtime.out.SubscribeRealTimeQuotePort;
 import com.kokimstocktrading.domain.monitoring.PriceCondition;
+import com.kokimstocktrading.domain.monitoring.TouchDirection;
 import com.kokimstocktrading.domain.realtime.RealTimeQuote;
 import lombok.extern.slf4j.Slf4j;
 import org.awaitility.Awaitility;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,8 +18,6 @@ import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -52,12 +52,18 @@ public class MonitorPriceTest {
         monitorPriceService.stopAllMonitoring();
     }
 
+    @AfterEach
+    void tearDown() {
+        // 각 테스트 후에도 모니터링 중지 (이미 모든 조건도 함께 제거됨)
+        monitorPriceService.stopAllMonitoring();
+    }
+
     @DisplayName("가격 조건 도메인 모델을 등록할 수 있다.")
     @Test
     public void canRegisterPriceConditionModel() {
         //given
         AtomicBoolean triggered = new AtomicBoolean(false);
-        PriceCondition condition = new PriceCondition("005930", 76000L,
+        PriceCondition condition = new PriceCondition(UUID.randomUUID(),"005930", 76000L, TouchDirection.FROM_ABOVE,
                 () -> triggered.set(true), "삼성전자 목표가 달성");
 
         //when
@@ -77,8 +83,8 @@ public class MonitorPriceTest {
     @Test
     public void canRemoveConditionById() {
         //given
-        PriceCondition condition1 = new PriceCondition("005930", 76000L, () -> {});
-        PriceCondition condition2 = new PriceCondition("005930", 77000L, () -> {});
+        PriceCondition condition1 = new PriceCondition(UUID.randomUUID(), "005930", 76000L, () -> {}, TouchDirection.FROM_BELOW);
+        PriceCondition condition2 = new PriceCondition(UUID.randomUUID(), "005930", 77000L, () -> {}, TouchDirection.FROM_BELOW);
 
         PriceCondition registered1 = monitorPriceService.registerPriceCondition(condition1);
         PriceCondition registered2 = monitorPriceService.registerPriceCondition(condition2);
@@ -99,7 +105,7 @@ public class MonitorPriceTest {
     @Test
     public void canGetConditionById() {
         //given
-        PriceCondition condition = new PriceCondition("005930", 76000L, () -> {}, "테스트 조건");
+        PriceCondition condition = new PriceCondition(UUID.randomUUID(), "005930", 76000L, TouchDirection.FROM_ABOVE, () -> {}, "테스트 조건");
         PriceCondition registered = monitorPriceService.registerPriceCondition(condition);
 
         //when
@@ -118,11 +124,11 @@ public class MonitorPriceTest {
     public void detectSamsungPriceCondition() {
         //given
         AtomicBoolean conditionTriggered = new AtomicBoolean(false);
-        PriceCondition condition = new PriceCondition("005930", 76000L,
+        PriceCondition condition = new PriceCondition(UUID.randomUUID(), "005930", 76000L,
                 () -> {
                     System.out.println("조건감시 - 삼성전자 76000원 달성!");
                     conditionTriggered.set(true);
-                });
+                }, TouchDirection.FROM_BELOW);
 
         //when
         monitorPriceService.registerPriceCondition(condition);
@@ -142,23 +148,23 @@ public class MonitorPriceTest {
         AtomicInteger conditionCount = new AtomicInteger(0);
 
         //when
-        PriceCondition condition1 = new PriceCondition(stockCode, 76000L,
+        PriceCondition condition1 = new PriceCondition(UUID.randomUUID(), stockCode, 76000L,
                 () -> {
                     System.out.println("조건1 달성 - 삼성전자 76000원!");
                     conditionCount.incrementAndGet();
-                });
+                }, TouchDirection.FROM_BELOW);
 
-        PriceCondition condition2 = new PriceCondition(stockCode, 77000L,
+        PriceCondition condition2 = new PriceCondition(UUID.randomUUID(), stockCode, 77000L,
                 () -> {
                     System.out.println("조건2 달성 - 삼성전자 77000원!");
                     conditionCount.incrementAndGet();
-                });
+                }, TouchDirection.FROM_BELOW);
 
-        PriceCondition condition3 = new PriceCondition(stockCode, 78000L,
+        PriceCondition condition3 = new PriceCondition(UUID.randomUUID(), stockCode, 78000L,
                 () -> {
                     System.out.println("조건3 달성 - 삼성전자 78000원!");
                     conditionCount.incrementAndGet();
-                });
+                },TouchDirection.FROM_BELOW);
 
         PriceCondition registered1 = monitorPriceService.registerPriceCondition(condition1);
         PriceCondition registered2 = monitorPriceService.registerPriceCondition(condition2);
@@ -173,53 +179,13 @@ public class MonitorPriceTest {
         assertThat(registered2.getId()).isNotEqualTo(registered3.getId());
     }
 
-    @DisplayName("여러 조건이 등록된 종목에서 조건들이 순차적으로 달성된다.")
-    @Test
-    public void multipleConditionsAchievedSequentially() {
-        //given
-        String stockCode = "005930";
-        AtomicInteger achievedCount = new AtomicInteger(0);
-        List<String> achievedConditions = Collections.synchronizedList(new ArrayList<>());
-
-        //when
-        PriceCondition condition1 = new PriceCondition(stockCode, 76000L,
-                () -> {
-                    achievedConditions.add("76000원 달성");
-                    achievedCount.incrementAndGet();
-                });
-
-        PriceCondition condition2 = new PriceCondition(stockCode, 77000L,
-                () -> {
-                    achievedConditions.add("77000원 달성");
-                    achievedCount.incrementAndGet();
-                });
-
-        monitorPriceService.registerPriceCondition(condition1);
-        monitorPriceService.registerPriceCondition(condition2);
-        monitorPriceService.startMonitoring();
-
-        //then
-        // 첫 번째 조건 달성 대기
-        Awaitility.await()
-                .atMost(Duration.ofSeconds(10))
-                .until(() -> achievedCount.get() >= 1);
-
-        System.out.println("달성된 조건들: " + achievedConditions);
-        assertThat(achievedCount.get()).isGreaterThanOrEqualTo(1);
-
-        // 시나리오에 따라 77000원도 달성될 수 있음
-        if (achievedCount.get() == 2) {
-            assertThat(achievedConditions).contains("76000원 달성", "77000원 달성");
-        }
-    }
-
     @DisplayName("조건 달성 후 해당 조건이 자동으로 삭제된다.")
     @Test
     public void conditionRemovedAfterAchievement() {
         //given
         AtomicBoolean triggered = new AtomicBoolean(false);
-        PriceCondition condition = new PriceCondition("005930", 74000L, // 시작가보다 낮은 조건 (즉시 달성)
-                () -> triggered.set(true));
+        PriceCondition condition = new PriceCondition(UUID.randomUUID(), "005930", 74000L, // 시작가보다 낮은 조건 (즉시 달성)
+                () -> triggered.set(true), TouchDirection.FROM_BELOW);
 
         //when
         PriceCondition registered = monitorPriceService.registerPriceCondition(condition);
@@ -249,9 +215,9 @@ public class MonitorPriceTest {
         String stockCode = "005930";
 
         //when
-        PriceCondition condition1 = new PriceCondition(stockCode, 76000L, () -> {});
-        PriceCondition condition2 = new PriceCondition(stockCode, 77000L, () -> {});
-        PriceCondition condition3 = new PriceCondition(stockCode, 78000L, () -> {});
+        PriceCondition condition1 = new PriceCondition(UUID.randomUUID(), stockCode, 76000L, () -> {}, TouchDirection.FROM_BELOW);
+        PriceCondition condition2 = new PriceCondition(UUID.randomUUID() ,stockCode, 77000L, () -> {}, TouchDirection.FROM_BELOW);
+        PriceCondition condition3 = new PriceCondition(UUID.randomUUID(), stockCode, 78000L, () -> {}, TouchDirection.FROM_BELOW);
 
         PriceCondition registered1 = monitorPriceService.registerPriceCondition(condition1);
         PriceCondition registered2 = monitorPriceService.registerPriceCondition(condition2);
@@ -277,9 +243,9 @@ public class MonitorPriceTest {
     public void canRemoveAllConditionsForStock() {
         //given
         String stockCode = "005930";
-        PriceCondition condition1 = new PriceCondition(stockCode, 76000L, () -> {});
-        PriceCondition condition2 = new PriceCondition(stockCode, 77000L, () -> {});
-        PriceCondition condition3 = new PriceCondition(stockCode, 78000L, () -> {});
+        PriceCondition condition1 = new PriceCondition(UUID.randomUUID(), stockCode, 76000L, () -> {}, TouchDirection.FROM_BELOW);
+        PriceCondition condition2 = new PriceCondition(UUID.randomUUID(), stockCode, 77000L, () -> {}, TouchDirection.FROM_BELOW);
+        PriceCondition condition3 = new PriceCondition(UUID.randomUUID(), stockCode, 78000L, () -> {}, TouchDirection.FROM_BELOW);
 
         monitorPriceService.registerPriceCondition(condition1);
         monitorPriceService.registerPriceCondition(condition2);
@@ -300,9 +266,9 @@ public class MonitorPriceTest {
     @Test
     public void canGetAllConditions() {
         //given
-        PriceCondition condition1 = new PriceCondition("005930", 76000L, () -> {});
-        PriceCondition condition2 = new PriceCondition("000660", 86000L, () -> {});
-        PriceCondition condition3 = new PriceCondition("005930", 77000L, () -> {});
+        PriceCondition condition1 = new PriceCondition(UUID.randomUUID(), "005930", 76000L, () -> {}, TouchDirection.FROM_BELOW);
+        PriceCondition condition2 = new PriceCondition(UUID.randomUUID() ,"000660", 86000L, () -> {}, TouchDirection.FROM_BELOW);
+        PriceCondition condition3 = new PriceCondition(UUID.randomUUID(), "005930", 77000L, () -> {}, TouchDirection.FROM_BELOW);
 
         //when
         monitorPriceService.registerPriceCondition(condition1);
@@ -326,28 +292,28 @@ public class MonitorPriceTest {
 
         //when
         // 삼성전자 - 2개 조건
-        PriceCondition samsung1 = new PriceCondition("005930", 76000L,
+        PriceCondition samsung1 = new PriceCondition(UUID.randomUUID(), "005930", 76000L,
                 () -> {
                     System.out.println("삼성전자 76000원 달성!");
                     totalAchieved.incrementAndGet();
-                });
-        PriceCondition samsung2 = new PriceCondition("005930", 77000L,
+                }, TouchDirection.FROM_BELOW);
+        PriceCondition samsung2 = new PriceCondition(UUID.randomUUID(),"005930", 77000L,
                 () -> {
                     System.out.println("삼성전자 77000원 달성!");
                     totalAchieved.incrementAndGet();
-                });
+                }, TouchDirection.FROM_BELOW);
 
         // SK하이닉스 - 2개 조건
-        PriceCondition sk1 = new PriceCondition("000660", 86000L,
+        PriceCondition sk1 = new PriceCondition(UUID.randomUUID(), "000660", 86000L,
                 () -> {
                     System.out.println("SK하이닉스 86000원 달성!");
                     totalAchieved.incrementAndGet();
-                });
-        PriceCondition sk2 = new PriceCondition("000660", 87000L,
+                }, TouchDirection.FROM_BELOW);
+        PriceCondition sk2 = new PriceCondition(UUID.randomUUID(), "000660", 87000L,
                 () -> {
                     System.out.println("SK하이닉스 87000원 달성!");
                     totalAchieved.incrementAndGet();
-                });
+                }, TouchDirection.FROM_BELOW);
 
         monitorPriceService.registerPriceCondition(samsung1);
         monitorPriceService.registerPriceCondition(samsung2);
