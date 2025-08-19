@@ -44,3 +44,8 @@ secretkey.properties
 */secretkey.properties
 **/secretkey.properties
 stock-service.tar.gz
+
+
+### ECS ###
+task-definition-temp.json
+task-definition-final.json
