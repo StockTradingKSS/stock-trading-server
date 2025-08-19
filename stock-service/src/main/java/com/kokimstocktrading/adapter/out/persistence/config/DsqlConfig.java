@@ -37,10 +37,10 @@ public class DsqlConfig {
     private String region;
 
     // AWS Credentials (환경변수에서 읽기)
-    @Value("${AWS_ACCESS_KEY_ID:}")
+    @Value("${DSQL_AWS_ACCESS_KEY_ID:}")
     private String awsAccessKey;
 
-    @Value("${AWS_SECRET_ACCESS_KEY:}")
+    @Value("${DSQL_AWS_SECRET_ACCESS_KEY:}")
     private String awsSecretKey;
 
     private HikariDataSource dataSource;
