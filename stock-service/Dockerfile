@@ -17,8 +17,8 @@ EXPOSE 8080
 ARG JAR_FILE
 COPY ${JAR_FILE} app.jar
 
-# 헬스체크 추가 (포트 8080으로 수정)
-HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
+# 헬스체크 추가 (start-period 120s로 증가)
+HEALTHCHECK --interval=30s --timeout=5s --start-period=120s --retries=3 \
   CMD curl -f http://localhost:8080/actuator/health || exit 1
 
 # 애플리케이션 실행

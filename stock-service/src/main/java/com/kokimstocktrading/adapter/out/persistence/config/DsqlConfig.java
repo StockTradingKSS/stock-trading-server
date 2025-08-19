@@ -10,9 +10,11 @@ import software.amazon.awssdk.regions.Region;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 
@@ -22,52 +24,36 @@ import java.util.function.Consumer;
 @Slf4j
 @Configuration
 @EnableScheduling
+@Profile("prod") // 프로덕션 환경에서만 활성화
 public class DsqlConfig {
 
-    @Value("${app.datasource.dsql.endpoint:3iabuhgpuyweeglhfr73mskaoq.dsql.ap-northeast-2.on.aws}")
+    @Value("${app.datasource.dsql.endpoint}")
     private String dsqlEndpoint;
 
-    @Value("${app.datasource.dsql.user:admin}")
+    @Value("${app.datasource.dsql.user}")
     private String dsqlUser;
 
-    @Value("${app.datasource.dsql.database:postgres}")
+    @Value("${app.datasource.dsql.database}")
     private String dsqlDatabase;
 
-    @Value("${app.datasource.dsql.region:ap-northeast-2}")
+    @Value("${app.datasource.dsql.region}")
     private String region;
-
-    // AWS Credentials (환경변수에서 읽기)
-    @Value("${DSQL_AWS_ACCESS_KEY_ID:}")
-    private String awsAccessKey;
-
-    @Value("${DSQL_AWS_SECRET_ACCESS_KEY:}")
-    private String awsSecretKey;
 
     private HikariDataSource dataSource;
     private DsqlUtilities dsqlUtilities;
 
     /**
-     * DSQL Utilities 초기화
+     * DSQL Utilities 초기화 - IAM Role 사용
      */
     private DsqlUtilities getDsqlUtilities() {
         if (dsqlUtilities == null) {
             try {
-                if (!awsAccessKey.isEmpty() && !awsSecretKey.isEmpty()) {
-                    // 명시적 credentials 사용
-                    log.info("명시적 AWS Credentials 사용");
-                    AwsBasicCredentials credentials = AwsBasicCredentials.create(awsAccessKey, awsSecretKey);
-                    dsqlUtilities = DsqlUtilities.builder()
-                            .region(Region.of(region))
-                            .credentialsProvider(StaticCredentialsProvider.create(credentials))
-                            .build();
-                } else {
-                    // 기본 credential chain 사용
-                    log.info("기본 AWS Credential Chain 사용");
-                    dsqlUtilities = DsqlUtilities.builder()
-                            .region(Region.of(region))
-                            .credentialsProvider(DefaultCredentialsProvider.create())
-                            .build();
-                }
+                log.info("ECS Task Role을 사용한 DSQL 연결 초기화");
+                dsqlUtilities = DsqlUtilities.builder()
+                        .region(Region.of(region))
+                        .credentialsProvider(DefaultCredentialsProvider.create()) // ECS Task Role 자동 사용
+                        .build();
+                log.info("DSQL Utilities 초기화 완료 - Region: {}", region);
             } catch (Exception e) {
                 log.error("DsqlUtilities 초기화 실패", e);
                 throw new RuntimeException("DsqlUtilities 초기화 실패", e);
@@ -82,12 +68,12 @@ public class DsqlConfig {
     @Bean
     @Primary
     public HikariDataSource dsqlDataSource() {
-        log.info("DSQL HikariCP DataSource 생성");
+        log.info("DSQL HikariCP DataSource 생성 (프로덕션)");
         
         HikariDataSource hds = new HikariDataSource();
         hds.setJdbcUrl(String.format("jdbc:postgresql://%s:5432/%s", dsqlEndpoint, dsqlDatabase));
         hds.setUsername(dsqlUser);
-        hds.setPassword(""); // 초기에는 빈 패스워드, 토큰으로 업데이트
+        hds.setPassword(""); // 초기에는 빈 패스워드, IAM 토큰으로 업데이트
         
         // HikariCP 설정
         hds.setMaximumPoolSize(10);
@@ -116,12 +102,12 @@ public class DsqlConfig {
     }
 
     /**
-     * DSQL IAM 토큰 생성 및 설정
+     * DSQL IAM 토큰 생성 및 설정 - ECS Task Role 사용
      */
     @Scheduled(fixedRateString = "${app.dsql.token.refresh-interval:600000}") // 10분마다 토큰 갱신
     public void generateToken() {
         try {
-            log.info("DSQL 토큰 생성 시작 - Region: {}, User: {}", region, dsqlUser);
+            log.info("DSQL IAM 토큰 생성 시작 - Region: {}, User: {}", region, dsqlUser);
             
             DsqlUtilities utilities = getDsqlUtilities();
             
@@ -139,7 +125,7 @@ public class DsqlConfig {
             
             if (dataSource != null) {
                 dataSource.setPassword(token);
-                log.info("DSQL 토큰 생성 완료");
+                log.info("DSQL IAM 토큰 생성 완료 (ECS Task Role 사용)");
             }
             
         } catch (Exception e) {
