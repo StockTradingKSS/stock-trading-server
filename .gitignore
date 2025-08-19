@@ -35,6 +35,8 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Environment Files ###
 /.env
 /*/.env
 /**/.env
@@ -44,3 +46,14 @@ secretkey.properties
 */secretkey.properties
 **/secretkey.properties
 stock-service.tar.gz
+
+### Docker ###
+.dockerignore
+docker-compose.override.yml
+
+### ECS ###
+task-definition-temp.json
+task-definition-final.json
+
+### Spring Boot Docker Compose ###
+.spring-boot-docker-compose.yml
