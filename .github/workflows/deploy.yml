@@ -58,7 +58,7 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build Docker image with Spring Boot
+      - name: Build Docker image (traditional)
         id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
@@ -66,9 +66,14 @@ jobs:
         run: |
           cd stock-service
           
-          # Spring Boot로 Docker 이미지 빌드
-          ../gradlew bootBuildImage --imageName=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          ../gradlew bootBuildImage --imageName=$ECR_REGISTRY/$ECR_REPOSITORY:latest
+          # JAR 파일 확인
+          JAR_FILE=$(ls build/libs/*.jar | head -1 | xargs basename)
+          echo "Found JAR file: $JAR_FILE"
+          
+          # 전통적인 Docker 빌드 (Paketo 없이)
+          docker build --build-arg JAR_FILE=build/libs/$JAR_FILE \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
           
           # ECR에 푸시
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG

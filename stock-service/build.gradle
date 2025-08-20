@@ -72,25 +72,6 @@ springBoot {
     buildInfo()
 }
 
-// Docker 이미지 빌드 설정
-tasks.named('bootBuildImage') {
-    imageName = "stock-trading-server:${version}"
-    tags = ["stock-trading-server:latest"]
-    
-    // 환경 변수 설정 - 646MB 가용 메모리에 맞춤
-    environment = [
-        'BP_JVM_VERSION': '24',
-        // 646MB에서 작동하도록 기존 설정 최소 조정
-        'JAVA_TOOL_OPTIONS': '-Xss512k -Xmx300M -XX:ReservedCodeCacheSize=180M -XX:MaxMetaspaceSize=120M -XX:MaxDirectMemorySize=8M -XX:+UseSerialGC'
-    ]
-    
-    // 빌드팩 설정
-    builder = 'paketobuildpacks/builder-jammy-base:latest'
-    
-    // 빌드 시간 최적화
-    createdDate = 'now'
-}
-
 tasks.named('compileJava') {
     options.compilerArgs += ['-Xlint:deprecation', '-Xlint:unchecked']
 }
