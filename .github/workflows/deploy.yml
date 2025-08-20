@@ -7,8 +7,8 @@ on:
 env:
   AWS_REGION: ap-northeast-2
   ECR_REPOSITORY: stock-trading-server
-  ECS_SERVICE: stock-trading-server-task-service-yohqe9po
-  ECS_CLUSTER: stock-trading-cluster
+  ECS_SERVICE: ${{ secrets.ECS_SERVICE_NAME }}
+  ECS_CLUSTER: ${{ secrets.ECS_CLUSTER_NAME }}
   ECS_TASK_DEFINITION: .aws/stock-trading-server-task-revision1.json
   CONTAINER_NAME: stock-trading-server-container
 
