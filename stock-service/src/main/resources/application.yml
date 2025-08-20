@@ -4,7 +4,89 @@ server:
 spring:
   application:
     name: transaction-service
+  
+  # 기본 프로필 설정
+  profiles:
+    default: local
+  
+  # 기본 설정 (모든 환경 공통)
+  liquibase:
+    enabled: false
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+  packages-to-scan: com.KimStock.adapter.in.web
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always
+  server:
+    port: 8080
+
+env:
+  file:
+    directory: ./stock-service/
+
+---
+# 로컬 개발 환경 설정
+spring:
   config:
+    activate:
+      on-profile: local
+    import: optional:classpath:secretkey.properties
+  # 로컬 PostgreSQL 설정
+  datasource:
+    url: jdbc:postgresql://localhost:5432/stocktrading
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update  # 로컬에서는 자동 테이블 생성
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        use_sql_comments: true
+    show-sql: true
+    open-in-view: false
+
+# 로컬 개발용 키움 API (테스트 키)
+kiwoom:
+  api:
+    app-key: ${KIWOOM_API_APP_KEY}
+    app-secret: ${KIWOOM_API_APP_SECRET}
+    base-url: https://api.kiwoom.com
+  websocket:
+    url: wss://api.kiwoom.com:10000/api/dostk/websocket
+
+logging:
+  level:
+    com.kokimstocktrading: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql: DEBUG
+    org.springframework.boot.autoconfigure: WARN
+
+---
+# 프로덕션 환경 설정
+spring:
+  config:
+    activate:
+      on-profile: prod
     import: optional:classpath:secretkey.properties
   
   # DSQL 사용을 위한 JPA 설정
@@ -35,44 +117,26 @@ spring:
         jdbc.batch_versioned_data: true
     show-sql: false
     open-in-view: false
-  
-  liquibase:
-    enabled: false
-
-springdoc:
-  swagger-ui:
-    path: /swagger-ui.html
-    tags-sorter: alpha
-    operations-sorter: alpha
-  api-docs:
-    path: /v3/api-docs
-  packages-to-scan: com.KimStock.adapter.in.web
-  default-consumes-media-type: application/json
-  default-produces-media-type: application/json
 
 kiwoom:
   api:
-    app-key: ${kiwoom.api.app-key}
-    app-secret: ${kiwoom.api.app-secret}
+    app-key: ${KIWOOM_API_APP_KEY}
+    app-secret: ${KIWOOM_API_APP_SECRET}
     base-url: https://api.kiwoom.com
   websocket:
     url: wss://api.kiwoom.com:10000/api/dostk/websocket
 
-# DSQL 설정
+# DSQL 설정 (프로덕션)
 app:
   datasource:
     dsql:
-      endpoint: ${dsql.endpoint}
-      user: ${dsql.user}
-      database: ${dsql.database}
-      region: ${dsql.region}
+      endpoint: ${DSQL_ENDPOINT}
+      user: ${DSQL_USER}
+      database: ${DSQL_DATABASE}
+      region: ${DSQL_REGION}
   dsql:
     token:
       refresh-interval: 600000  # 10분마다 토큰 갱신
-
-env:
-  file:
-    directory: ./stock-service/
 
 logging:
   level:
@@ -91,3 +155,5 @@ logging:
     org.springframework.transaction: WARN
     # 커스텀 로깅
     com.KimStock.adapter.out.persistence: INFO
+    com.kokimstocktrading: INFO
+    root: WARN

@@ -1,0 +1,161 @@
+name: Deploy to Amazon ECS
+
+on:
+  push:
+    branches: [ "main" ]
+
+env:
+  AWS_REGION: ap-northeast-2
+  ECR_REPOSITORY: stock-trading-server
+  ECS_SERVICE: ${{ secrets.ECS_SERVICE_NAME }}
+  ECS_CLUSTER: ${{ secrets.ECS_CLUSTER_NAME }}
+  ECS_TASK_DEFINITION: .aws/stock-trading-server-task-revision1.json
+  CONTAINER_NAME: stock-trading-server-container
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 24
+        uses: actions/setup-java@v4
+        with:
+          java-version: '24'
+          distribution: 'oracle'
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build stock-service module
+        run: ./gradlew :stock-service:clean :stock-service:build
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          cd stock-service
+          # JAR 파일명 확인
+          JAR_FILE=$(ls build/libs/*.jar | head -1 | xargs basename)
+          echo "Found JAR file: $JAR_FILE"
+          
+          # Docker 빌드 (JAR_FILE 아규먼트 전달)
+          docker build --build-arg JAR_FILE=build/libs/$JAR_FILE \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker build --build-arg JAR_FILE=build/libs/$JAR_FILE \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
+          
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Validate required secrets
+        env:
+          DSQL_ENDPOINT: ${{ secrets.DSQL_ENDPOINT }}
+          DSQL_USER: ${{ secrets.DSQL_USER }}
+          DSQL_DATABASE: ${{ secrets.DSQL_DATABASE }}
+          DSQL_REGION: ${{ secrets.DSQL_REGION }}
+          KIWOOM_API_APP_KEY: ${{ secrets.KIWOOM_API_APP_KEY }}
+          KIWOOM_API_APP_SECRET: ${{ secrets.KIWOOM_API_APP_SECRET }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          # Validate all required secrets
+          REQUIRED_SECRETS=("DSQL_ENDPOINT" "DSQL_USER" "DSQL_DATABASE" "DSQL_REGION"
+                           "KIWOOM_API_APP_KEY" "KIWOOM_API_APP_SECRET"
+                           "AWS_ACCESS_KEY_ID" "AWS_SECRET_ACCESS_KEY")
+          
+          MISSING_SECRETS=()
+          for secret in "${REQUIRED_SECRETS[@]}"; do
+            if [[ -z "${!secret}" ]]; then
+              MISSING_SECRETS+=("$secret")
+            fi
+          done
+          
+          if [[ ${#MISSING_SECRETS[@]} -gt 0 ]]; then
+            echo "Error: The following required secrets are missing:"
+            for secret in "${MISSING_SECRETS[@]}"; do
+              echo "  - $secret"
+            done
+            echo ""
+            echo "Please configure these secrets in GitHub repository settings:"
+            echo "Settings > Secrets and variables > Actions"
+            exit 1
+          fi
+          
+          echo "✅ All required secrets are configured"
+
+      - name: Update task definition with secrets
+        env:
+          DSQL_ENDPOINT: ${{ secrets.DSQL_ENDPOINT }}
+          DSQL_USER: ${{ secrets.DSQL_USER }}
+          DSQL_DATABASE: ${{ secrets.DSQL_DATABASE }}
+          DSQL_REGION: ${{ secrets.DSQL_REGION }}
+          KIWOOM_API_APP_KEY: ${{ secrets.KIWOOM_API_APP_KEY }}
+          KIWOOM_API_APP_SECRET: ${{ secrets.KIWOOM_API_APP_SECRET }}
+        run: |
+          
+          # Copy base task definition
+          cp ${{ env.ECS_TASK_DEFINITION }} task-definition-temp.json
+          
+          # Add environment variables to task definition using jq
+          jq --arg dsql_endpoint "$DSQL_ENDPOINT" \
+             --arg dsql_user "$DSQL_USER" \
+             --arg dsql_database "$DSQL_DATABASE" \
+             --arg dsql_region "$DSQL_REGION" \
+             --arg kiwoom_key "$KIWOOM_API_APP_KEY" \
+             --arg kiwoom_secret "$KIWOOM_API_APP_SECRET" \
+             '.containerDefinitions[0].environment += [
+               {"name": "DSQL_ENDPOINT", "value": $dsql_endpoint},
+               {"name": "DSQL_USER", "value": $dsql_user},
+               {"name": "DSQL_DATABASE", "value": $dsql_database},
+               {"name": "DSQL_REGION", "value": $dsql_region},
+               {"name": "KIWOOM_API_APP_KEY", "value": $kiwoom_key},
+               {"name": "KIWOOM_API_APP_SECRET", "value": $kiwoom_secret}
+             ]' task-definition-temp.json > task-definition-final.json
+
+      - name: Fill in the new image ID in the Amazon ECS task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition-final.json
+          container-name: ${{ env.CONTAINER_NAME }}
+          image: ${{ steps.build-image.outputs.image }}
+
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true
