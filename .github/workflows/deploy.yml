@@ -66,9 +66,9 @@ jobs:
         run: |
           cd stock-service
           
-          # JAR 파일 확인
-          JAR_FILE=$(ls build/libs/*.jar | head -1 | xargs basename)
-          echo "Found JAR file: $JAR_FILE"
+          # 실행 가능한 JAR 파일 확인 (plain.jar 제외)
+          JAR_FILE=$(ls build/libs/*-SNAPSHOT.jar | grep -v plain | head -1 | xargs basename)
+          echo "Found executable JAR file: $JAR_FILE"
           
           # 전통적인 Docker 빌드 (Paketo 없이)
           docker build --build-arg JAR_FILE=build/libs/$JAR_FILE \
