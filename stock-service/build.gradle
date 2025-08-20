@@ -77,9 +77,15 @@ tasks.named('bootBuildImage') {
     imageName = "stock-trading-server:${version}"
     tags = ["stock-trading-server:latest"]
     
-    // 환경 변수 설정
+    // 환경 변수 설정 - 동적 메모리 감지
     environment = [
-        'BP_JVM_VERSION': '24'  // Java 24 사용
+        'BP_JVM_VERSION': '24',
+        // 동적 메모리 계산 (컨테이너 메모리의 75% 사용)
+        'BPL_JVM_HEAD_ROOM': '25',          // 시스템용 25% 예약
+        'BPL_JVM_LOADED_CLASS_COUNT': '20', // 클래스 개수 최소화
+        'BPL_JVM_THREAD_COUNT': '25',       // 스레드 개수 최소화
+        // 컨테이너 메모리 자동 감지
+        'JAVA_OPTS': '-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseSerialGC -XX:+TieredCompilation -XX:TieredStopAtLevel=1'
     ]
     
     // 빌드팩 설정
