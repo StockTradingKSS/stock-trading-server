@@ -1,4 +1,4 @@
-FROM eclipse-temurin:24-jre-jammy
+FROM openjdk:24-slim
 
 # 애플리케이션 디렉토리 생성
 WORKDIR /app
