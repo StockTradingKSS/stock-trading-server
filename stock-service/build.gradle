@@ -2,7 +2,6 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.4.5'
     id 'io.spring.dependency-management' version '1.1.7'
-    id 'com.palantir.docker' version '0.35.0'
 }
 
 group = 'com.kokimstocktrading'
@@ -67,11 +66,31 @@ dependencies {
     testAnnotationProcessor 'org.projectlombok:lombok'
 }
 
-docker {
-    name rootProject.name + '-' + project.name + ':' + version
-    dockerfile file('Dockerfile')
-    files tasks.bootJar.outputs.files
-    buildArgs(['JAR_FILE': tasks.bootJar.outputs.files.singleFile.name])
+// Spring Boot 내장 Docker 지원
+springBoot {
+    mainClass.set('com.kokimstocktrading.TransactionServiceApplication')
+    buildInfo()
+}
+
+// Docker 이미지 빌드 설정
+tasks.named('bootBuildImage') {
+    imageName = "stock-trading-server:${version}"
+    tags = ["stock-trading-server:latest"]
+    
+    // 환경 변수 설정
+    environment = [
+        'BP_JVM_VERSION': '24'  // Java 24 사용
+    ]
+    
+    // 빌드팩 설정
+    builder = 'paketobuildpacks/builder-jammy-base:latest'
+    
+    // 빌드 시간 최적화
+    createdDate = 'now'
+}
+
+tasks.named('compileJava') {
+    options.compilerArgs += ['-Xlint:deprecation', '-Xlint:unchecked']
 }
 
 tasks.named('test') {
