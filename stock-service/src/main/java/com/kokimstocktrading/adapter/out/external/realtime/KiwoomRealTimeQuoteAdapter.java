@@ -8,11 +8,8 @@ import com.common.ExternalSystemAdapter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Value;
-import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.FluxSink;
 import reactor.core.publisher.Sinks;
-import reactor.util.context.Context;
 
 import java.net.URI;
 import java.time.LocalDate;
@@ -22,7 +19,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.LongConsumer;
 
 @ExternalSystemAdapter
 @Slf4j
@@ -81,54 +77,8 @@ public class KiwoomRealTimeQuoteAdapter implements SubscribeRealTimeQuotePort, D
             // 메시지 구독 및 처리
             messageSink.asFlux().subscribe(this::processWebSocketMessage);
 
-            // 메시지 싱크 설정
-            webSocketClient.setMessageSink(new FluxSink<Map<String, Object>>() {
-                @Override
-                public void complete() {
-                    messageSink.tryEmitComplete();
-                }
-
-                @Override
-                public void error(Throwable e) {
-                    messageSink.tryEmitError(e);
-                }
-
-                @Override
-                public FluxSink<Map<String, Object>> next(Map<String, Object> value) {
-                    messageSink.tryEmitNext(value);
-                    return this;
-                }
-
-                @Override
-                public Context currentContext() {
-                    return Context.empty();
-                }
-
-                @Override
-                public long requestedFromDownstream() {
-                    return 0;
-                }
-
-                @Override
-                public boolean isCancelled() {
-                    return false;
-                }
-
-                @Override
-                public FluxSink<Map<String, Object>> onRequest(LongConsumer longConsumer) {
-                    return this;
-                }
-
-                @Override
-                public FluxSink<Map<String, Object>> onCancel(Disposable disposable) {
-                    return this;
-                }
-
-                @Override
-                public FluxSink<Map<String, Object>> onDispose(Disposable disposable) {
-                    return this;
-                }
-            });
+            // 메시지 콜백 설정
+            webSocketClient.setMessageSink(messageSink);
 
             // 연결 시작
             webSocketClient.connectBlocking();

@@ -7,7 +7,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
-import reactor.core.publisher.FluxSink;
+import reactor.core.publisher.Sinks;
 
 import java.net.URI;
 import java.util.List;
@@ -24,7 +24,7 @@ public class KiwoomWebSocketClient extends WebSocketClient {
     private boolean isConnected = false;
     private final CountDownLatch loginLatch = new CountDownLatch(1);
     @Setter
-    private FluxSink<Map<String, Object>> messageSink;
+    private Sinks.Many<Map<String, Object>> messageSink;
 
     // 현재 구독 중인 그룹 관리
     private final Map<String, List<String>> subscribedGroups = new ConcurrentHashMap<>();
@@ -45,7 +45,8 @@ public class KiwoomWebSocketClient extends WebSocketClient {
     public void onMessage(String message) {
         try {
             log.debug("WebSocket 메시지 수신: {}", message);
-            Map response = gson.fromJson(message, Map.class);
+            @SuppressWarnings("unchecked")
+            Map<String, Object> response = gson.fromJson(message, Map.class);
             String trnm = (String) response.get("trnm");
 
             if ("LOGIN".equals(trnm)) {
@@ -64,7 +65,7 @@ public class KiwoomWebSocketClient extends WebSocketClient {
             } else if ("REAL".equals(trnm)) {
                 // 실시간 데이터 메시지 처리
                 if (messageSink != null) {
-                    messageSink.next(response);
+                    messageSink.tryEmitNext(response);
                 }
             } else if ("REG".equals(trnm) || "REMOVE".equals(trnm)) {
                 double returnCode = ((Double) response.get("return_code"));

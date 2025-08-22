@@ -35,6 +35,8 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Environment Files ###
 /.env
 /*/.env
 /**/.env
@@ -49,3 +51,14 @@ stock-service/src/test/java/com/kokimstocktrading/ReactiveSinksFluxTest.java
 stock-service/src/test/java/com/kokimstocktrading/RealBackpressureTest.java
 qodana.yaml
 stock-service/src/test/java/com/kokimstocktrading/ReactorFluxIntervalTest.java
+
+### Docker ###
+.dockerignore
+docker-compose.override.yml
+
+### ECS ###
+task-definition-temp.json
+task-definition-final.json
+
+### Spring Boot Docker Compose ###
+.spring-boot-docker-compose.yml
