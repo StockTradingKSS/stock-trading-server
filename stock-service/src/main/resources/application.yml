@@ -48,7 +48,7 @@ spring:
     import: optional:classpath:secretkey.properties
   # 로컬 PostgreSQL 설정
   datasource:
-    url: jdbc:postgresql://localhost:5432/stocktrading
+    url: jdbc:postgresql://localhost:15432/stocktrading
     username: postgres
     password: postgres
     driver-class-name: org.postgresql.Driver
