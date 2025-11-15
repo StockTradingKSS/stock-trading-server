@@ -62,3 +62,4 @@ task-definition-final.json
 
 ### Spring Boot Docker Compose ###
 .spring-boot-docker-compose.yml
+/.claude
