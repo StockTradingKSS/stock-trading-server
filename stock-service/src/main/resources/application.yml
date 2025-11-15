@@ -4,11 +4,11 @@ server:
 spring:
   application:
     name: transaction-service
-  
+
   # 기본 프로필 설정
   profiles:
     default: local
-  
+
   # 기본 설정 (모든 환경 공통)
   liquibase:
     enabled: false
@@ -52,7 +52,7 @@ spring:
     username: postgres
     password: postgres
     driver-class-name: org.postgresql.Driver
-  
+
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
@@ -118,6 +118,20 @@ spring:
     show-sql: false
     open-in-view: false
 
+  liquibase:
+    enabled: false
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+  packages-to-scan: com.kokimstocktrading.adapter.in.web
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
+
 kiwoom:
   api:
     app-key: ${KIWOOM_API_APP_KEY}
@@ -127,6 +141,11 @@ kiwoom:
     url: wss://api.kiwoom.com:10000/api/dostk/websocket
 
 # DSQL 설정 (프로덕션)
+krx:
+  api:
+    base-url: https://kind.krx.co.kr
+
+# DSQL 설정
 app:
   datasource:
     dsql:
