@@ -39,6 +39,10 @@ env:
   file:
     directory: ./stock-service/
 
+krx:
+  api:
+    base-url: https://kind.krx.co.kr
+
 ---
 # 로컬 개발 환경 설정
 spring:
@@ -139,11 +143,6 @@ kiwoom:
     base-url: https://api.kiwoom.com
   websocket:
     url: wss://api.kiwoom.com:10000/api/dostk/websocket
-
-# DSQL 설정 (프로덕션)
-krx:
-  api:
-    base-url: https://kind.krx.co.kr
 
 # DSQL 설정
 app:
