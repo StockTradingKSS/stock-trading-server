@@ -5,6 +5,7 @@ import com.kokimstocktrading.application.condition.port.in.RegisterTradingCondit
 import com.kokimstocktrading.application.condition.port.in.RegisterTrendLineCommand;
 import com.kokimstocktrading.application.condition.port.out.TradingTimePort;
 import com.kokimstocktrading.application.monitoring.DynamicConditionService;
+import com.kokimstocktrading.application.notification.port.out.SendNotificationPort;
 import com.kokimstocktrading.domain.monitoring.MovingAverageCondition;
 import com.kokimstocktrading.domain.monitoring.TrendLineCondition;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ public class TradingConditionService implements RegisterTradingConditionUseCase 
     //    private final SaveTradingConditionPort saveTradingConditionPort;
     private final TradingTimePort tradingTimePort;
     private final DynamicConditionService dynamicConditionService;
+    private final SendNotificationPort sendNotificationPort;
 
     @Override
     @Transactional
@@ -39,7 +41,7 @@ public class TradingConditionService implements RegisterTradingConditionUseCase 
                 command.period(),
                 command.interval(),
                 command.touchDirection(),
-                () -> log.info("조건 발동 {}", command),
+                () -> handleMovingAverageConditionTriggered(command.stockCode(), command.description()),
                 command.description()
         );
 
@@ -83,7 +85,7 @@ public class TradingConditionService implements RegisterTradingConditionUseCase 
                 command.stockCode(), command.toDate(), command.slope(),
                 command.interval(),
                 command.touchDirection(),
-                () -> handleTrendLineConditionTriggered(command.stockCode()),
+                () -> handleTrendLineConditionTriggered(command.stockCode(), command.description()),
                 command.description());
 
         // 2. DB 저장
@@ -133,17 +135,31 @@ public class TradingConditionService implements RegisterTradingConditionUseCase 
     /**
      * 이평선 조건 발동 시 처리
      */
-    private void handleMovingAverageConditionTriggered(String stockCode) {
-        log.info("이평선 조건 발동: 종목={}", stockCode);
-        // TODO: 실제 매매 로직 구현
+    private void handleMovingAverageConditionTriggered(String stockCode, String description) {
+        log.info("이평선 조건 발동: 종목={}, 설명={}", stockCode, description);
+
+        String message = String.format("[이평선 조건 발동]\n종목: %s\n설명: %s", stockCode, description);
+
+        sendNotificationPort.sendKakaoMessage(message)
+                .subscribe(
+                        unused -> log.info("카카오톡 알림 전송 완료: {}", stockCode),
+                        error -> log.error("카카오톡 알림 전송 실패: {}", stockCode, error)
+                );
     }
 
     /**
      * 추세선 조건 발동 시 처리
      */
-    private void handleTrendLineConditionTriggered(String stockCode) {
-        log.info("추세선 조건 발동: 종목={}", stockCode);
-        // TODO: 실제 매매 로직 구현
+    private void handleTrendLineConditionTriggered(String stockCode, String description) {
+        log.info("추세선 조건 발동: 종목={}, 설명={}", stockCode, description);
+
+        String message = String.format("[추세선 조건 발동]\n종목: %s\n설명: %s", stockCode, description);
+
+        sendNotificationPort.sendKakaoMessage(message)
+                .subscribe(
+                        unused -> log.info("카카오톡 알림 전송 완료: {}", stockCode),
+                        error -> log.error("카카오톡 알림 전송 실패: {}", stockCode, error)
+                );
     }
 
     /**
