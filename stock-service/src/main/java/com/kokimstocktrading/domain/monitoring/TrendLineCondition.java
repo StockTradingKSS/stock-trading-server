@@ -35,6 +35,11 @@ public class TrendLineCondition {
 
     public TrendLineCondition(String stockCode, LocalDateTime toDate, BigDecimal slope,
                               CandleInterval interval, TouchDirection touchDirection, Runnable callback, String description) {
+        this(UUID.randomUUID(), stockCode, toDate, slope, interval, touchDirection, callback, description);
+    }
+
+    public TrendLineCondition(UUID id, String stockCode, LocalDateTime toDate, BigDecimal slope,
+                              CandleInterval interval, TouchDirection touchDirection, Runnable callback, String description) {
         this.touchDirection = touchDirection;
         if (stockCode == null || stockCode.trim().isEmpty()) {
             throw new IllegalArgumentException("종목코드는 필수입니다");
@@ -52,13 +57,13 @@ public class TrendLineCondition {
             throw new IllegalArgumentException("콜백은 필수입니다");
         }
 
-        this.id = UUID.randomUUID();
+        this.id = id;
         this.stockCode = stockCode;
         this.toDate = toDate;
         this.slope = slope;
         this.interval = interval;
         this.callback = callback;
-        this.description = description != null ? description : 
+        this.description = description != null ? description :
             String.format("%s 추세선(기울기:%.2f) 조건", stockCode, slope);
     }
 

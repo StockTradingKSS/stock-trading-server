@@ -1,6 +1,7 @@
 package com.kokimstocktrading.adapter.out.persistence.entity;
 
 import com.kokimstocktrading.domain.candle.CandleInterval;
+import com.kokimstocktrading.domain.monitoring.MovingAverageCondition;
 import com.kokimstocktrading.domain.monitoring.TouchDirection;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -118,5 +119,23 @@ public class MovingAverageConditionEntity {
      */
     public void activate() {
         this.isActive = true;
+    }
+
+    /**
+     * 엔티티 → 도메인 변환
+     *
+     * @param callback 조건 만족 시 실행할 콜백 (DB에 저장 불가하므로 별도 주입)
+     * @return 도메인 객체
+     */
+    public MovingAverageCondition toDomain(Runnable callback) {
+        return new MovingAverageCondition(
+                this.id,
+                this.stockCode,
+                this.period,
+                this.interval,
+                this.touchDirection,
+                callback,
+                this.description
+        );
     }
 }
