@@ -2,7 +2,6 @@ package com.kokimstocktrading.adapter.out.external.market;
 
 import com.kokimstocktrading.application.market.port.out.LoadMarketStatusPort;
 import com.kokimstocktrading.domain.market.MarketStatus;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
