@@ -43,6 +43,12 @@ krx:
   api:
     base-url: https://kind.krx.co.kr
 
+kakao:
+  api:
+    base-url: https://kapi.kakao.com
+    rest-api-key: ${KAKAO_REST_API_KEY}
+    access-token: ${KAKAO_ACCESS_TOKEN}
+
 ---
 # 로컬 개발 환경 설정
 spring:
