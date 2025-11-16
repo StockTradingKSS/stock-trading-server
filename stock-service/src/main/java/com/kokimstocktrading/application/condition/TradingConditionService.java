@@ -156,10 +156,9 @@ public class TradingConditionService implements RegisterTradingConditionUseCase 
         String message = String.format("[이평선 조건 발동]\n종목: %s\n설명: %s", stockCode, description);
 
         sendNotificationPort.sendKakaoMessage(message)
-                .subscribe(
-                        unused -> log.info("카카오톡 알림 전송 완료: {}", stockCode),
-                        error -> log.error("카카오톡 알림 전송 실패: {}", stockCode, error)
-                );
+                .doOnSuccess(unused -> log.info("카카오톡 알림 전송 완료: {}", stockCode))
+                .doOnError(error -> log.error("카카오톡 알림 전송 실패: {}", stockCode, error))
+                .subscribe();
     }
 
     /**
@@ -171,10 +170,9 @@ public class TradingConditionService implements RegisterTradingConditionUseCase 
         String message = String.format("[추세선 조건 발동]\n종목: %s\n설명: %s", stockCode, description);
 
         sendNotificationPort.sendKakaoMessage(message)
-                .subscribe(
-                        unused -> log.info("카카오톡 알림 전송 완료: {}", stockCode),
-                        error -> log.error("카카오톡 알림 전송 실패: {}", stockCode, error)
-                );
+                .doOnSuccess(unused -> log.info("카카오톡 알림 전송 완료: {}", stockCode))
+                .doOnError(error -> log.error("카카오톡 알림 전송 실패: {}", stockCode, error))
+                .subscribe();
     }
 
     /**
