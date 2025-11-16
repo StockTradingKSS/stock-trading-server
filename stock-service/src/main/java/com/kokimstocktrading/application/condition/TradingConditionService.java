@@ -33,7 +33,7 @@ public class TradingConditionService implements RegisterTradingConditionUseCase 
 
     @Override
     @Transactional
-    public Mono<MovingAverageCondition> registerMovingAverageCondition(RegisterMovingAverageCommand command) {
+    public MovingAverageCondition registerMovingAverageCondition(RegisterMovingAverageCommand command) {
         log.info("이평선 조건 등록 요청: 종목={}, 기간={}, 간격={}",
                 command.stockCode(), command.period(), command.interval());
 
@@ -55,25 +55,30 @@ public class TradingConditionService implements RegisterTradingConditionUseCase 
         // 3. 거래 시간이면 DynamicConditionService에 등록
         if (tradingTimePort.isTradingTime()) {
             log.info("거래 시간이므로 모니터링 서비스에 등록: {}", savedCondition.getId());
-            return dynamicConditionService.registerMovingAverageCondition(
-                    savedCondition.getStockCode(),
-                    savedCondition.getPeriod(),
-                    savedCondition.getInterval(),
-                    savedCondition.getTouchDirection(),
-                    savedCondition.getCallback(),
-                    savedCondition.getDescription()
-            ).doOnSuccess(registered -> log.info("이평선 조건 모니터링 등록 완료: {}", registered.getId()))
-                    .doOnError(error -> log.error("이평선 조건 모니터링 등록 실패", error))
-                    .thenReturn(savedCondition);
+            try {
+                dynamicConditionService.registerMovingAverageCondition(
+                        savedCondition.getStockCode(),
+                        savedCondition.getPeriod(),
+                        savedCondition.getInterval(),
+                        savedCondition.getTouchDirection(),
+                        savedCondition.getCallback(),
+                        savedCondition.getDescription()
+                ).block();
+                log.info("이평선 조건 모니터링 등록 완료: {}", savedCondition.getId());
+            } catch (Exception e) {
+                log.error("이평선 조건 모니터링 등록 실패", e);
+                throw new RuntimeException("모니터링 등록 실패", e);
+            }
         } else {
             log.info("거래 시간이 아니므로 모니터링 서비스 등록 생략: {}", savedCondition.getId());
-            return Mono.just(savedCondition);
         }
+
+        return savedCondition;
     }
 
     @Override
     @Transactional
-    public Mono<TrendLineCondition> registerTrendLineCondition(RegisterTrendLineCommand command) {
+    public TrendLineCondition registerTrendLineCondition(RegisterTrendLineCommand command) {
         log.info("추세선 조건 등록 요청: 종목={}, 끝점={}, 기울기={}, 간격={}",
                 command.stockCode(), command.toDate(), command.slope(), command.interval());
 
@@ -95,26 +100,31 @@ public class TradingConditionService implements RegisterTradingConditionUseCase 
         // 3. 거래 시간이면 DynamicConditionService에 등록
         if (tradingTimePort.isTradingTime()) {
             log.info("거래 시간이므로 모니터링 서비스에 등록: {}", savedCondition.getId());
-            return dynamicConditionService.registerTrendLineCondition(
-                    savedCondition.getStockCode(),
-                    savedCondition.getToDate(),
-                    savedCondition.getSlope(),
-                    savedCondition.getInterval(),
-                    savedCondition.getTouchDirection(),
-                    savedCondition.getCallback(),
-                    savedCondition.getDescription()
-            ).doOnSuccess(registered -> log.info("추세선 조건 모니터링 등록 완료: {}", registered.getId()))
-                    .doOnError(error -> log.error("추세선 조건 모니터링 등록 실패", error))
-                    .thenReturn(savedCondition);
+            try {
+                dynamicConditionService.registerTrendLineCondition(
+                        savedCondition.getStockCode(),
+                        savedCondition.getToDate(),
+                        savedCondition.getSlope(),
+                        savedCondition.getInterval(),
+                        savedCondition.getTouchDirection(),
+                        savedCondition.getCallback(),
+                        savedCondition.getDescription()
+                ).block();
+                log.info("추세선 조건 모니터링 등록 완료: {}", savedCondition.getId());
+            } catch (Exception e) {
+                log.error("추세선 조건 모니터링 등록 실패", e);
+                throw new RuntimeException("모니터링 등록 실패", e);
+            }
         } else {
             log.info("거래 시간이 아니므로 모니터링 서비스 등록 생략: {}", savedCondition.getId());
-            return Mono.just(savedCondition);
         }
+
+        return savedCondition;
     }
 
     @Override
     @Transactional
-    public Mono<Void> deleteCondition(UUID conditionId) {
+    public void deleteCondition(UUID conditionId) {
         log.info("조건 삭제 요청: {}", conditionId);
 
         // 1. 이평선 조건 삭제 시도
@@ -125,8 +135,7 @@ public class TradingConditionService implements RegisterTradingConditionUseCase 
             // DynamicConditionService에서도 제거
             dynamicConditionService.removeMovingAverageCondition(conditionId);
             log.info("이평선 조건 모니터링 제거 완료: {}", conditionId);
-
-            return Mono.empty();
+            return;
         } catch (Exception e) {
             log.debug("이평선 조건으로 삭제 실패, 추세선 조건 시도: {}", conditionId);
         }
@@ -139,11 +148,9 @@ public class TradingConditionService implements RegisterTradingConditionUseCase 
             // DynamicConditionService에서도 제거
             dynamicConditionService.removeTrendLineCondition(conditionId);
             log.info("추세선 조건 모니터링 제거 완료: {}", conditionId);
-
-            return Mono.empty();
         } catch (Exception e) {
             log.error("조건 삭제 실패: {}", conditionId, e);
-            return Mono.error(new IllegalArgumentException("존재하지 않는 조건 ID: " + conditionId));
+            throw new IllegalArgumentException("존재하지 않는 조건 ID: " + conditionId);
         }
     }
 
