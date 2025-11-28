@@ -182,6 +182,7 @@ spring:
   config:
     activate:
       on-profile: test
+    import: optional:classpath:secretkey.properties
 
   # H2 in-memory 데이터베이스 (테스트용)
   datasource:
@@ -211,7 +212,7 @@ spring:
 slack:
   api:
     base-url: https://slack.com/api
-    bot-token: ${SLACK_BOT_TOKEN:xoxb-test-token}
+    bot-token: ${SLACK_BOT_TOKEN}
 
 kiwoom:
   api:
