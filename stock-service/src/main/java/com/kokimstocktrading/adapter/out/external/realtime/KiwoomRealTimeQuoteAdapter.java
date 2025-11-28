@@ -90,6 +90,7 @@ public class KiwoomRealTimeQuoteAdapter implements SubscribeRealTimeQuotePort, D
     }
   }
 
+  @SuppressWarnings("unchecked")
   private void processWebSocketMessage(Map<String, Object> message) {
     try {
       if (!"REAL".equals(message.get("trnm"))) {
