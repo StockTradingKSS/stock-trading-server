@@ -15,16 +15,16 @@ import org.springframework.web.reactive.function.client.WebClient;
 @Slf4j
 public class KakaoWebClientConfig {
 
-    @Value("${kakao.api.base-url}")
-    private String kakaoApiBaseUrl;
+  @Value("${kakao.api.base-url}")
+  private String kakaoApiBaseUrl;
 
-    @Bean(name = "kakaoWebClient")
-    public WebClient kakaoWebClient() {
-        log.info("카카오 웹클라이언트 초기화: baseUrl={}", kakaoApiBaseUrl);
+  @Bean(name = "kakaoWebClient")
+  public WebClient kakaoWebClient() {
+    log.info("카카오 웹클라이언트 초기화: baseUrl={}", kakaoApiBaseUrl);
 
-        return WebClient.builder()
-                .baseUrl(kakaoApiBaseUrl)
-                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-                .build();
-    }
+    return WebClient.builder()
+        .baseUrl(kakaoApiBaseUrl)
+        .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+        .build();
+  }
 }

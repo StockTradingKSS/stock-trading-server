@@ -7,11 +7,11 @@ import reactor.core.publisher.Mono;
  */
 public interface SendNotificationPort {
 
-    /**
-     * 카카오톡으로 알림 메시지 전송
-     *
-     * @param message 전송할 메시지
-     * @return 전송 결과
-     */
-    Mono<Void> sendKakaoMessage(String message);
+  /**
+   * 카카오톡으로 알림 메시지 전송
+   *
+   * @param message 전송할 메시지
+   * @return 전송 결과
+   */
+  Mono<Void> sendKakaoMessage(String message);
 }

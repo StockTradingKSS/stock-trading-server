@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 public class HealthCheckController {
 
-    @GetMapping("/v1/health-check")
-    public boolean healthCheck() {
-        return true;
-    }
+  @GetMapping("/v1/health-check")
+  public boolean healthCheck() {
+    return true;
+  }
 }

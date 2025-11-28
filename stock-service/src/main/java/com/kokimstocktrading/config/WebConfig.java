@@ -7,9 +7,9 @@ import org.springframework.web.reactive.config.WebFluxConfigurer;
 @Configuration
 public class WebConfig implements WebFluxConfigurer {
 
-    @Override
-    public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/**")
-                .addResourceLocations("classpath:/static/");
-    }
+  @Override
+  public void addResourceHandlers(ResourceHandlerRegistry registry) {
+    registry.addResourceHandler("/**")
+        .addResourceLocations("classpath:/static/");
+  }
 }

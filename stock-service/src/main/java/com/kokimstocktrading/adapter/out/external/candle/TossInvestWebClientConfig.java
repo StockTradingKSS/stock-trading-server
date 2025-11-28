@@ -12,21 +12,21 @@ import org.springframework.web.reactive.function.client.WebClient;
 @Configuration
 public class TossInvestWebClientConfig {
 
-    @Bean("tossInvestWebClient")
-    public WebClient tossInvestWebClient() {
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
+  @Bean("tossInvestWebClient")
+  public WebClient tossInvestWebClient() {
+    ObjectMapper objectMapper = new ObjectMapper();
+    objectMapper.registerModule(new JavaTimeModule());
 
-        ExchangeStrategies exchangeStrategies = ExchangeStrategies.builder()
-                .codecs(configurer -> {
-                    configurer.defaultCodecs().jackson2JsonEncoder(new Jackson2JsonEncoder(objectMapper));
-                    configurer.defaultCodecs().jackson2JsonDecoder(new Jackson2JsonDecoder(objectMapper));
-                })
-                .build();
+    ExchangeStrategies exchangeStrategies = ExchangeStrategies.builder()
+        .codecs(configurer -> {
+          configurer.defaultCodecs().jackson2JsonEncoder(new Jackson2JsonEncoder(objectMapper));
+          configurer.defaultCodecs().jackson2JsonDecoder(new Jackson2JsonDecoder(objectMapper));
+        })
+        .build();
 
-        return WebClient.builder()
-                .baseUrl("https://wts-info-api.tossinvest.com")
-                .exchangeStrategies(exchangeStrategies)
-                .build();
-    }
+    return WebClient.builder()
+        .baseUrl("https://wts-info-api.tossinvest.com")
+        .exchangeStrategies(exchangeStrategies)
+        .build();
+  }
 }
