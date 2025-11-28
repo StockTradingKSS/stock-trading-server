@@ -177,14 +177,12 @@ logging:
     root: WARN
 
 ---
-# 프로덕션 환경 설정
+# 테스트 환경 설정
 spring:
   config:
     activate:
       on-profile: test
-    import: optional:classpath:secretkey.properties
 
-  # DSQL 사용을 위한 JPA 설정
   # H2 in-memory 데이터베이스 (테스트용)
   datasource:
     url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
@@ -210,52 +208,22 @@ spring:
   liquibase:
     enabled: false
 
-springdoc:
-  swagger-ui:
-    path: /swagger-ui.html
-    tags-sorter: alpha
-    operations-sorter: alpha
-  api-docs:
-    path: /v3/api-docs
-  packages-to-scan: com.kokimstocktrading.adapter.in.web
-  default-consumes-media-type: application/json
-  default-produces-media-type: application/json
+slack:
+  api:
+    base-url: https://slack.com/api
+    bot-token: ${SLACK_BOT_TOKEN:xoxb-test-token}
 
 kiwoom:
   api:
-    app-key: ${KIWOOM_API_APP_KEY}
-    app-secret: ${KIWOOM_API_APP_SECRET}
+    app-key: ${KIWOOM_API_APP_KEY:test-key}
+    app-secret: ${KIWOOM_API_APP_SECRET:test-secret}
     base-url: https://api.kiwoom.com
   websocket:
     url: wss://api.kiwoom.com:10000/api/dostk/websocket
 
-# DSQL 설정
-app:
-  datasource:
-    dsql:
-      endpoint: ${DSQL_ENDPOINT}
-      user: ${DSQL_USER}
-      database: ${DSQL_DATABASE}
-      region: ${DSQL_REGION}
-  dsql:
-    token:
-      refresh-interval: 600000  # 10분마다 토큰 갱신
-
 logging:
   level:
-    org.springframework.sql.init: WARN
-    com.KimStock.config.com.KimStock.adapter.out.persistence.config.DsqlConfig: INFO
-    com.KimStock.config.com.KimStock.adapter.out.persistence.config.DsqlExceptionOverride: INFO
-    # DSQL 관련 로깅
-    software.amazon.dsql: WARN
-    org.hibernate.type.descriptor.sql.BasicBinder: WARN
-    # SQL 쿼리 로깅 - 필요시에만 DEBUG로 변경
-    org.hibernate.SQL: WARN
-    org.hibernate.type.descriptor.sql: WARN
-    org.hibernate.orm.jdbc.bind: WARN
-    # JPA 쿼리 로깅
-    org.springframework.orm.jpa: WARN
-    org.springframework.transaction: WARN
-    # 커스텀 로깅
-    com.kokimstocktrading: INFO
-    root: WARN
+    com.kokimstocktrading: DEBUG
+    org.springframework.test: WARN
+    org.hibernate: WARN
+    org.springframework.web: WARN
