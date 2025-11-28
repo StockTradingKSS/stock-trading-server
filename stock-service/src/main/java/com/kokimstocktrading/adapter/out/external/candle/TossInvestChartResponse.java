@@ -1,59 +1,60 @@
 package com.kokimstocktrading.adapter.out.external.candle;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Getter;
-
 import java.time.OffsetDateTime;
 import java.util.List;
+import lombok.Getter;
 
 @Getter
 public class TossInvestChartResponse {
 
-    @JsonProperty("result")
-    private Result result;
+  @JsonProperty("result")
+  private Result result;
 
-    @Getter
-    public static class Result {
-        @JsonProperty("code")
-        private String code;
+  @Getter
+  public static class Result {
 
-        @JsonProperty("nextDateTime")
-        private OffsetDateTime nextDateTime;  // LocalDateTime -> OffsetDateTime
+    @JsonProperty("code")
+    private String code;
 
-        @JsonProperty("exchangeRate")
-        private Integer exchangeRate;
+    @JsonProperty("nextDateTime")
+    private OffsetDateTime nextDateTime;  // LocalDateTime -> OffsetDateTime
 
-        @JsonProperty("exchange")
-        private String exchange;
+    @JsonProperty("exchangeRate")
+    private Integer exchangeRate;
 
-        @JsonProperty("candles")
-        private List<Candle> candles;
-    }
+    @JsonProperty("exchange")
+    private String exchange;
 
-    @Getter
-    public static class Candle {
-        @JsonProperty("dt")
-        private OffsetDateTime dt;  // LocalDateTime -> OffsetDateTime
+    @JsonProperty("candles")
+    private List<Candle> candles;
+  }
 
-        @JsonProperty("base")
-        private Long base;
+  @Getter
+  public static class Candle {
 
-        @JsonProperty("open")
-        private Long open;
+    @JsonProperty("dt")
+    private OffsetDateTime dt;  // LocalDateTime -> OffsetDateTime
 
-        @JsonProperty("high")
-        private Long high;
+    @JsonProperty("base")
+    private Long base;
 
-        @JsonProperty("low")
-        private Long low;
+    @JsonProperty("open")
+    private Long open;
 
-        @JsonProperty("close")
-        private Long close;
+    @JsonProperty("high")
+    private Long high;
 
-        @JsonProperty("volume")
-        private Long volume;
+    @JsonProperty("low")
+    private Long low;
 
-        @JsonProperty("amount")
-        private Long amount;
-    }
+    @JsonProperty("close")
+    private Long close;
+
+    @JsonProperty("volume")
+    private Long volume;
+
+    @JsonProperty("amount")
+    private Long amount;
+  }
 }

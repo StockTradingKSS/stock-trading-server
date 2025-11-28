@@ -8,8 +8,9 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @Configuration
 @EnableJpaRepositories(basePackages = "com.kokimstocktrading.adapter.out.persistence")
 @EntityScan(basePackages = {
-        "com.kokimstocktrading.adapter.out.persistence"
+    "com.kokimstocktrading.adapter.out.persistence"
 })
 @EnableTransactionManagement
 public class JpaConfig {
+
 }

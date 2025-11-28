@@ -4,11 +4,11 @@ server:
 spring:
   application:
     name: transaction-service
-  
+
   # 기본 프로필 설정
   profiles:
     default: local
-  
+
   # 기본 설정 (모든 환경 공통)
   liquibase:
     enabled: false
@@ -39,6 +39,15 @@ env:
   file:
     directory: ./stock-service/
 
+krx:
+  api:
+    base-url: https://kind.krx.co.kr
+
+slack:
+  api:
+    base-url: https://slack.com/api
+    bot-token: ${SLACK_BOT_TOKEN}
+
 ---
 # 로컬 개발 환경 설정
 spring:
@@ -48,11 +57,11 @@ spring:
     import: optional:classpath:secretkey.properties
   # 로컬 PostgreSQL 설정
   datasource:
-    url: jdbc:postgresql://localhost:5432/stocktrading
+    url: jdbc:postgresql://localhost:15432/stocktrading
     username: postgres
     password: postgres
     driver-class-name: org.postgresql.Driver
-  
+
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
@@ -118,6 +127,20 @@ spring:
     show-sql: false
     open-in-view: false
 
+  liquibase:
+    enabled: false
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+  packages-to-scan: com.kokimstocktrading.adapter.in.web
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
+
 kiwoom:
   api:
     app-key: ${KIWOOM_API_APP_KEY}
@@ -126,7 +149,7 @@ kiwoom:
   websocket:
     url: wss://api.kiwoom.com:10000/api/dostk/websocket
 
-# DSQL 설정 (프로덕션)
+# DSQL 설정
 app:
   datasource:
     dsql:
@@ -154,6 +177,5 @@ logging:
     org.springframework.orm.jpa: WARN
     org.springframework.transaction: WARN
     # 커스텀 로깅
-    com.KimStock.adapter.out.persistence: INFO
     com.kokimstocktrading: INFO
     root: WARN

@@ -11,10 +11,11 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 @Slf4j
 public class StockBatchScheduler {
-    private final RefreshStockUseCase refreshStockUseCase;
 
-    @Scheduled(cron = "0 30 7 * * *", zone = "Asia/Seoul")
-    public void saveStockScheduler() {
-        refreshStockUseCase.refreshStock();
-    }
+  private final RefreshStockUseCase refreshStockUseCase;
+
+  @Scheduled(cron = "0 30 7 * * *", zone = "Asia/Seoul")
+  public void saveStockScheduler() {
+    refreshStockUseCase.refreshStock();
+  }
 }

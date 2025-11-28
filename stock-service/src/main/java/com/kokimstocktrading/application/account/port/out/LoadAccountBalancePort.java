@@ -4,5 +4,6 @@ import com.kokimstocktrading.domain.account.AccountBalance;
 import reactor.core.publisher.Mono;
 
 public interface LoadAccountBalancePort {
-    Mono<AccountBalance> loadAccountBalance();
+
+  Mono<AccountBalance> loadAccountBalance();
 }
