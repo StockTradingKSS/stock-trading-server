@@ -33,7 +33,7 @@ public class KakaoMessageAdapter implements SendNotificationPort {
   private static final String SEND_TO_ME_URI = "/v2/api/talk/memo/default/send";
 
   @Override
-  public Mono<Void> sendKakaoMessage(String message) {
+  public Mono<Void> sendMessage(String message) {
     log.info("카카오톡 메시지 전송 시작: {}", message);
 
     try {

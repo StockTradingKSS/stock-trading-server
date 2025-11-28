@@ -1,6 +1,9 @@
 package com.kokimstocktrading.adapter.out.external.kakao;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,12 +11,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import reactor.test.StepVerifier;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-
 /**
  * 카카오톡 메시지 전송 통합 테스트
+ *
+ * @deprecated Slack으로 알림 시스템이 전환되었습니다. {@link
+ *     com.kokimstocktrading.adapter.out.external.slack.SlackMessageAdapterTest}를 사용하세요.
  */
+@Deprecated
+@Disabled("Slack으로 전환되어 비활성화됨")
 @SpringBootTest
 @ActiveProfiles("local")
 @Slf4j
@@ -37,13 +42,13 @@ class KakaoMessageAdapterTest {
 
     @DisplayName("카카오톡 나에게 보내기 테스트")
     @Test
-    void testSendKakaoMessage() {
+    void testSendMessage() {
         String testMessage = String.format(
                 "[테스트 알림]\n테스트 시간: %s\n상태: 정상 작동",
                 LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
         );
 
-        StepVerifier.create(kakaoMessageAdapter.sendKakaoMessage(testMessage))
+        StepVerifier.create(kakaoMessageAdapter.sendMessage(testMessage))
                 .expectComplete()
                 .verify();
 
@@ -63,7 +68,7 @@ class KakaoMessageAdapterTest {
                 LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
         );
 
-        StepVerifier.create(kakaoMessageAdapter.sendKakaoMessage(message))
+        StepVerifier.create(kakaoMessageAdapter.sendMessage(message))
                 .expectComplete()
                 .verify();
 
@@ -76,7 +81,7 @@ class KakaoMessageAdapterTest {
         for (int i = 1; i <= 3; i++) {
             String message = String.format("[테스트 %d] 연속 메시지 전송 테스트", i);
 
-            StepVerifier.create(kakaoMessageAdapter.sendKakaoMessage(message))
+            StepVerifier.create(kakaoMessageAdapter.sendMessage(message))
                     .expectComplete()
                     .verify();
 

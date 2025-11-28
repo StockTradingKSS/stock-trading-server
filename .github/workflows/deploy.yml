@@ -90,11 +90,14 @@ jobs:
           KIWOOM_API_APP_SECRET: ${{ secrets.KIWOOM_API_APP_SECRET }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_CHANNEL: ${{ secrets.SLACK_CHANNEL }}
         run: |
           # Validate all required secrets
           REQUIRED_SECRETS=("DSQL_ENDPOINT" "DSQL_USER" "DSQL_DATABASE" "DSQL_REGION"
                            "KIWOOM_API_APP_KEY" "KIWOOM_API_APP_SECRET"
-                           "AWS_ACCESS_KEY_ID" "AWS_SECRET_ACCESS_KEY")
+                           "AWS_ACCESS_KEY_ID" "AWS_SECRET_ACCESS_KEY"
+                           "SLACK_BOT_TOKEN" "SLACK_CHANNEL")
           
           MISSING_SECRETS=()
           for secret in "${REQUIRED_SECRETS[@]}"; do
@@ -124,11 +127,13 @@ jobs:
           DSQL_REGION: ${{ secrets.DSQL_REGION }}
           KIWOOM_API_APP_KEY: ${{ secrets.KIWOOM_API_APP_KEY }}
           KIWOOM_API_APP_SECRET: ${{ secrets.KIWOOM_API_APP_SECRET }}
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_CHANNEL: ${{ secrets.SLACK_CHANNEL }}
         run: |
-          
+
           # Copy base task definition
           cp ${{ env.ECS_TASK_DEFINITION }} task-definition-temp.json
-          
+
           # Add environment variables to task definition using jq
           jq --arg dsql_endpoint "$DSQL_ENDPOINT" \
              --arg dsql_user "$DSQL_USER" \
@@ -136,13 +141,17 @@ jobs:
              --arg dsql_region "$DSQL_REGION" \
              --arg kiwoom_key "$KIWOOM_API_APP_KEY" \
              --arg kiwoom_secret "$KIWOOM_API_APP_SECRET" \
+             --arg slack_token "$SLACK_BOT_TOKEN" \
+             --arg slack_channel "$SLACK_CHANNEL" \
              '.containerDefinitions[0].environment += [
                {"name": "DSQL_ENDPOINT", "value": $dsql_endpoint},
                {"name": "DSQL_USER", "value": $dsql_user},
                {"name": "DSQL_DATABASE", "value": $dsql_database},
                {"name": "DSQL_REGION", "value": $dsql_region},
                {"name": "KIWOOM_API_APP_KEY", "value": $kiwoom_key},
-               {"name": "KIWOOM_API_APP_SECRET", "value": $kiwoom_secret}
+               {"name": "KIWOOM_API_APP_SECRET", "value": $kiwoom_secret},
+               {"name": "SLACK_BOT_TOKEN", "value": $slack_token},
+               {"name": "SLACK_CHANNEL", "value": $slack_channel}
              ]' task-definition-temp.json > task-definition-final.json
 
       - name: Fill in the new image ID in the Amazon ECS task definition
