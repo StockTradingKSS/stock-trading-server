@@ -14,7 +14,7 @@ import reactor.test.StepVerifier;
  * Slack 메시지 전송 통합 테스트
  */
 @SpringBootTest
-@ActiveProfiles("local")
+@ActiveProfiles("test")
 @Slf4j
 class SlackMessageAdapterTest {
 

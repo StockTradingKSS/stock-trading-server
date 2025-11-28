@@ -70,6 +70,9 @@ dependencies {
     testImplementation 'org.projectlombok:lombok'
     testAnnotationProcessor 'org.projectlombok:lombok'
 
+    // H2 Database for testing
+    testRuntimeOnly 'com.h2database:h2'
+
     // Mockito agent for Java 21+
     testRuntimeOnly 'org.mockito:mockito-subclass'
 }
