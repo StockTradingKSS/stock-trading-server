@@ -45,6 +45,12 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build stock-service module
+        env:
+          KAKAO_REST_API_KEY: ${{ secrets.KAKAO_REST_API_KEY }}
+          KAKAO_REFRESH_TOKEN: ${{ secrets.KAKAO_REFRESH_TOKEN }}
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          KIWOOM_API_APP_KEY: ${{ secrets.KIWOOM_API_APP_KEY }}
+          KIWOOM_API_APP_SECRET: ${{ secrets.KIWOOM_API_APP_SECRET }}
         run: ./gradlew :stock-service:clean :stock-service:build
 
       - name: Configure AWS credentials
