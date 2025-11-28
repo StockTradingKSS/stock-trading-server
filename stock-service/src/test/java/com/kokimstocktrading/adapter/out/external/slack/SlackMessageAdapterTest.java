@@ -95,19 +95,6 @@ class SlackMessageAdapterTest {
     log.info("연속 메시지 전송 테스트 완료 - 슬랙 채널에서 3개 메시지를 확인하세요!");
   }
 
-  @DisplayName("특정 채널 메시지 전송 테스트")
-  @Test
-  void testSendToSpecificChannel() {
-    String testMessage = "[특정 채널 테스트]\n이 메시지는 특정 채널로 전송됩니다.";
-    String channel = "stock-monitoring-alarm";  // 기본 채널
-
-    StepVerifier.create(slackMessageAdapter.sendSlackMessage(channel, testMessage))
-        .expectComplete()
-        .verify();
-
-    log.info("특정 채널 메시지 전송 테스트 완료 - {} 채널을 확인하세요!", channel);
-  }
-
   @DisplayName("에러 처리 테스트 - 잘못된 채널")
   @Test
   void testInvalidChannel() {

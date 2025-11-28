@@ -3,10 +3,13 @@ package com.kokimstocktrading.adapter.out.external.slack;
 import com.kokimstocktrading.adapter.out.external.slack.dto.SlackMessageRequest;
 import com.kokimstocktrading.adapter.out.external.slack.dto.SlackMessageResponse;
 import com.kokimstocktrading.application.notification.port.out.SendNotificationPort;
+import jakarta.annotation.PostConstruct;
+import java.util.Arrays;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Primary;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -20,12 +23,30 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class SlackMessageAdapter implements SendNotificationPort {
 
+  private static final String POST_MESSAGE_URI = "/chat.postMessage";
+  // 환경별 채널 이름 (Java 코드로 하드코딩)
+  private static final String PROD_CHANNEL = "#stock-monitoring-alarm";
+  private static final String LOCAL_CHANNEL = "#stock-monitoring-alarm-test";
   @Qualifier("slackWebClient")
   private final WebClient slackWebClient;
+  private final Environment environment;
+  private String channelName;
 
-  private static final String CHANNEL_NAME = "#stock-monitoring-alarm";
+  @PostConstruct
+  public void init() {
+    String[] activeProfiles = environment.getActiveProfiles();
+    log.info("활성 프로필: {}", Arrays.toString(activeProfiles));
 
-  private static final String POST_MESSAGE_URI = "/chat.postMessage";
+    // 프로필에 따라 채널 이름 결정
+    if (Arrays.asList(activeProfiles).contains("prod")) {
+      channelName = PROD_CHANNEL;
+    } else {
+      // local 또는 기본값
+      channelName = LOCAL_CHANNEL;
+    }
+
+    log.info("슬랙 채널 설정 완료: {}", channelName);
+  }
 
   @Override
   public Mono<Void> sendMessage(String message) {
@@ -36,7 +57,7 @@ public class SlackMessageAdapter implements SendNotificationPort {
    * Slack 메시지 전송 (기본 채널)
    */
   public Mono<Void> sendSlackMessage(String message) {
-    return sendSlackMessage(CHANNEL_NAME, message);
+    return sendSlackMessage(channelName, message);
   }
 
   /**

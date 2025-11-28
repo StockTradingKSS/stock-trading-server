@@ -43,12 +43,10 @@ krx:
   api:
     base-url: https://kind.krx.co.kr
 
-kakao:
+slack:
   api:
-    base-url: https://kapi.kakao.com
-    auth-url: https://kauth.kakao.com
-    rest-api-key: ${KAKAO_REST_API_KEY}
-    refresh-token: ${KAKAO_REFRESH_TOKEN}
+    base-url: https://slack.com/api
+    bot-token: ${SLACK_BOT_TOKEN}
 
 ---
 # 로컬 개발 환경 설정
@@ -179,6 +177,5 @@ logging:
     org.springframework.orm.jpa: WARN
     org.springframework.transaction: WARN
     # 커스텀 로깅
-    com.KimStock.adapter.out.persistence: INFO
     com.kokimstocktrading: INFO
     root: WARN
