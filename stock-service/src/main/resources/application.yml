@@ -102,7 +102,7 @@ spring:
     # Aurora DSQL Hibernate Dialect 사용
     database-platform: software.amazon.dsql.hibernate.dialect.AuroraDSQLDialect
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     properties:
       hibernate:
         # DSQL 전용 설정
