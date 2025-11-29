@@ -18,7 +18,7 @@ COPY ${JAR_FILE} app.jar
 EXPOSE 8080
 
 # 헬스체크 추가
-HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=180s --retries=5 \
   CMD curl -f http://localhost:8080/api/stock-trading/v1/health-check || exit 1
 
 # JVM 옵션 직접 설정 (637MB 메모리에 최적화 - Metaspace 증가 + GC 최적화)
