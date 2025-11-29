@@ -1,4 +1,4 @@
-FROM openjdk:24-slim
+FROM eclipse-temurin:25-jre
 
 # 타임존 설정
 ENV TZ=Asia/Seoul
