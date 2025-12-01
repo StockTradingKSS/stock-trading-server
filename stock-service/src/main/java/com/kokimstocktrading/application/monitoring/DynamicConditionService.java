@@ -123,6 +123,7 @@ public class DynamicConditionService {
         .map(movingAveragePrice -> {
           PriceCondition priceCondition = condition.createPriceCondition(movingAveragePrice);
           PriceCondition registered = monitorPriceService.registerPriceCondition(priceCondition);
+          condition.setCurrentPriceConditionId(registered.getId());
 
           log.info("초기 이평선 가격 조건 생성: 종목={}, 이평선가격={}, 조건ID={}",
               condition.getStockCode(), movingAveragePrice, registered.getId());
@@ -188,8 +189,8 @@ public class DynamicConditionService {
     return movingAverageTouchPriceCalculator.calculateTouchPrice(
             condition.getStockCode(), condition.getPeriod(), condition.getInterval())
         .flatMap(newMovingAveragePrice -> {
-          // 기존 PriceCondition 삭제
-          UUID oldConditionId = condition.getId();
+          // 기존 PriceCondition 삭제 (currentPriceConditionId 사용)
+          UUID oldConditionId = condition.getCurrentPriceConditionId();
           if (oldConditionId != null) {
             boolean removed = monitorPriceService.removePriceCondition(oldConditionId);
             log.debug("기존 이평선 조건 삭제: 조건ID={}, 성공={}", oldConditionId, removed);
@@ -198,6 +199,7 @@ public class DynamicConditionService {
           // 새로운 PriceCondition 생성
           PriceCondition newPriceCondition = condition.createPriceCondition(newMovingAveragePrice);
           PriceCondition registered = monitorPriceService.registerPriceCondition(newPriceCondition);
+          condition.setCurrentPriceConditionId(registered.getId());
 
           log.info("이평선 조건 업데이트: 종목={}, 새 이평선가격={}, 새 조건ID={}",
               condition.getStockCode(), newMovingAveragePrice, registered.getId());
@@ -239,8 +241,8 @@ public class DynamicConditionService {
       scheduler.dispose();
     }
 
-    // 현재 활성화된 PriceCondition 삭제
-    UUID currentPriceConditionId = condition.getId();
+    // 현재 활성화된 PriceCondition 삭제 (currentPriceConditionId 사용)
+    UUID currentPriceConditionId = condition.getCurrentPriceConditionId();
     if (currentPriceConditionId != null) {
       monitorPriceService.removePriceCondition(currentPriceConditionId);
     }

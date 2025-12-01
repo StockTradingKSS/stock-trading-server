@@ -20,6 +20,9 @@ public class MovingAverageCondition {
   private final Runnable callback;
   private final String description;
 
+  // 현재 활성화된 PriceCondition의 ID (동적으로 업데이트됨)
+  private UUID currentPriceConditionId;
+
   public MovingAverageCondition(UUID uuid, String stockCode, int period, CandleInterval interval,
       Runnable callback, TouchDirection touchDirection) {
     this(uuid, stockCode, period, interval, touchDirection, callback, null);
@@ -65,8 +68,17 @@ public class MovingAverageCondition {
     String conditionDescription = String.format("%s %d%s 이평선(%d원) 도달",
         stockCode, period, interval.getDisplayName(), movingAveragePrice);
 
-    return new PriceCondition(id, stockCode, movingAveragePrice, touchDirection, callback,
+    // 새로운 UUID를 생성하여 PriceCondition 생성 (MovingAverageCondition ID와 분리)
+    UUID newPriceConditionId = UUID.randomUUID();
+    return new PriceCondition(newPriceConditionId, stockCode, movingAveragePrice, touchDirection, callback,
         conditionDescription);
+  }
+
+  /**
+   * 현재 활성화된 PriceCondition의 ID 설정
+   */
+  public void setCurrentPriceConditionId(UUID currentPriceConditionId) {
+    this.currentPriceConditionId = currentPriceConditionId;
   }
 
   @Override

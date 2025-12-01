@@ -2,17 +2,23 @@ package com.kokimstocktrading.domain.monitoring;
 
 import java.util.Objects;
 import java.util.UUID;
+import lombok.Getter;
 
 /**
  * 가격 조건 도메인 모델
  */
 public class PriceCondition {
 
+  // Getters
+  @Getter
   private final UUID id;
+  @Getter
   private final String stockCode;
+  @Getter
   private final Long targetPrice;
   private final TouchDirection touchDirection;
   private final Runnable callback;
+  @Getter
   private final String description;
 
   public PriceCondition(UUID id, String stockCode, Long targetPrice, Runnable callback,
@@ -64,23 +70,6 @@ public class PriceCondition {
       // 콜백 실행 중 오류가 발생해도 모니터링은 계속됨
       System.err.println("조건 콜백 실행 중 오류: " + e.getMessage());
     }
-  }
-
-  // Getters
-  public UUID getId() {
-    return id;
-  }
-
-  public String getStockCode() {
-    return stockCode;
-  }
-
-  public Long getTargetPrice() {
-    return targetPrice;
-  }
-
-  public String getDescription() {
-    return description;
   }
 
   @Override

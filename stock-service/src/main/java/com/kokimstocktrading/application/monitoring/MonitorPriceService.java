@@ -16,6 +16,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 @Service
 @Slf4j
@@ -212,8 +214,13 @@ public class MonitorPriceService {
         if (condition.isAchieved(currentPrice)) {
           log.info("가격 조건 달성! 조건={}, 현재가={}", condition, currentPrice);
 
-          // 콜백 실행
-          condition.executeCallback();
+          // 콜백을 비동기로 실행 (다른 조건 체크를 blocking하지 않도록)
+          Mono.fromRunnable(condition::executeCallback)
+              .subscribeOn(Schedulers.boundedElastic())
+              .subscribe(
+                  unused -> log.debug("조건 {} 콜백 실행 완료", condition.getId()),
+                  error -> log.error("조건 {} 콜백 실행 중 오류", condition.getId(), error)
+              );
 
           achievedConditions.add(condition);
         }
