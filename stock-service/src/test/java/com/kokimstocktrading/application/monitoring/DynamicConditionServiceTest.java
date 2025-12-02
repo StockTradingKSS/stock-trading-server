@@ -18,6 +18,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import reactor.core.Disposable;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
@@ -129,6 +131,119 @@ class DynamicConditionServiceTest {
 
         //then
         assertThat(movingAverage).isEqualTo(80000L);
+    }
+
+    @DisplayName("[문제 재현] 기존 로직: subscription이 누적되어 여러 번 업데이트된다")
+    @Test
+    public void oldLogic_subscriptionAccumulation_causeMultipleUpdates() {
+        //given
+        AtomicInteger updateCount = new AtomicInteger(0);
+        AtomicInteger activeSubscriptionCount = new AtomicInteger(0);
+
+        log.info("=== 기존 로직 테스트 시작 ===");
+
+        // 기존 문제 로직 재현: defer + Mono.fromRunnable(subscribe()) + repeat
+        // ⚠️ repeat(5)로 제한해서 안전하게 테스트
+        Disposable problematicScheduler = Flux.defer(() -> {
+                    log.info("defer() 실행 - 새로운 Mono.fromRunnable 생성");
+                    return Mono.fromRunnable(() -> {
+                        // 여기서 비동기 작업을 subscribe()로 실행 (문제!)
+                        Mono.delay(Duration.ofMillis(10))
+                            .doOnSubscribe(s -> {
+                                int count = activeSubscriptionCount.incrementAndGet();
+                                log.warn("🔥 새로운 subscription 생성! 현재 활성 subscription: {}", count);
+                            })
+                            .doOnNext(tick -> {
+                                int count = updateCount.incrementAndGet();
+                                log.info("업데이트 실행 #{} (활성 subscription: {})",
+                                    count, activeSubscriptionCount.get());
+                            })
+                            .subscribe();  // ❌ 문제: 여기서 subscription 생성!
+                    });
+                })
+                .take(5)  // ⚠️ 안전하게 5개로 제한 (repeat() 대신)
+                .subscribe();
+
+        //when - 100ms만 대기 (즉시 5개 생성될 것임)
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
+        problematicScheduler.dispose();
+
+        //then
+        log.info("=== 최종 결과 ===");
+        log.info("총 subscription 생성 수: {}", activeSubscriptionCount.get());
+        log.info("총 업데이트 실행 횟수: {}", updateCount.get());
+
+        // Mono.fromRunnable은 즉시 완료되므로 take(5)면 거의 즉시 5개 생성
+        assertThat(activeSubscriptionCount.get())
+            .describedAs("Mono.fromRunnable이 즉시 완료되어 5개 subscription이 빠르게 생성됨")
+            .isEqualTo(5);
+
+        // 모든 subscription이 살아있어서 각각 업데이트 실행
+        assertThat(updateCount.get())
+            .describedAs("누적된 subscription들이 각각 실행")
+            .isGreaterThanOrEqualTo(5);
+
+        log.info("✅ 기존 로직의 문제 확인: Mono.fromRunnable이 즉시 완료되어 subscription 폭발적 증가!");
+    }
+
+    @DisplayName("[해결] 새로운 로직: Flux.interval로 단일 subscription만 유지된다")
+    @Test
+    public void newLogic_singleSubscription_updatesCorrectly() {
+        //given
+        AtomicInteger updateCount = new AtomicInteger(0);
+        AtomicInteger subscriptionCount = new AtomicInteger(0);
+
+        log.info("=== 새로운 로직 테스트 시작 ===");
+
+        // 수정된 로직: Flux.interval 사용
+        Disposable correctScheduler = Flux.interval(
+                Duration.ofMillis(100),  // 초기 지연
+                Duration.ofMillis(100)   // 주기
+            )
+            .doOnSubscribe(s -> {
+                int count = subscriptionCount.incrementAndGet();
+                log.info("✅ Flux.interval subscription 생성: {}", count);
+            })
+            .take(5)  // 5번만 실행
+            .flatMap(tick ->
+                Mono.delay(Duration.ofMillis(10))
+                    .doOnNext(t -> {
+                        int count = updateCount.incrementAndGet();
+                        log.info("업데이트 실행 #{}", count);
+                    })
+            )
+            .subscribe();
+
+        //when - 1초 대기
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
+        correctScheduler.dispose();
+
+        //then
+        log.info("=== 최종 결과 ===");
+        log.info("총 subscription 생성 수: {}", subscriptionCount.get());
+        log.info("총 업데이트 실행 횟수: {}", updateCount.get());
+
+        // Flux.interval은 단일 subscription만 생성
+        assertThat(subscriptionCount.get())
+            .describedAs("Flux.interval은 단 1개의 subscription만 생성")
+            .isEqualTo(1);
+
+        // 정확히 5번만 업데이트
+        assertThat(updateCount.get())
+            .describedAs("정확히 5번만 업데이트 실행")
+            .isEqualTo(5);
+
+        log.info("✅ 새로운 로직 확인: 단일 subscription으로 정확한 횟수만큼 업데이트");
     }
 
     @DisplayName("1분 간격 이평선 조건은 매분 00초마다 업데이트된다.")

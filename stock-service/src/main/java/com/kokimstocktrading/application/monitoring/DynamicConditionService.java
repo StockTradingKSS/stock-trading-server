@@ -142,18 +142,18 @@ public class DynamicConditionService {
     long initialDelayMs = initialDelayProvider.apply(updateInterval);
     long periodMs = updateInterval.toMillis();
 
-    Disposable scheduler = Flux.defer(() ->
-            Mono.fromRunnable(() ->
-                updateMovingAverageCondition(condition)
-                    .doOnError(error -> log.error("이평선 조건 업데이트 중 오류: {}", condition, error))
-                    .onErrorContinue(
-                        (error, obj) -> log.warn("이평선 업데이트 오류, 계속 진행: {}", error.getMessage()))
-                    .subscribe()
-            )
-        ).repeat()
-        .delayElements(Duration.ofMillis(periodMs))
-        .delaySubscription(Duration.ofMillis(initialDelayMs))
-        .subscribeOn(reactor.core.scheduler.Schedulers.fromExecutor(this.scheduler))
+    Disposable scheduler = Flux.interval(
+            Duration.ofMillis(initialDelayMs),
+            Duration.ofMillis(periodMs),
+            reactor.core.scheduler.Schedulers.fromExecutor(this.scheduler)
+        )
+        .flatMap(tick -> updateMovingAverageCondition(condition)
+            .doOnError(error -> log.error("이평선 조건 업데이트 중 오류: {}", condition, error))
+            .onErrorResume(error -> {
+              log.warn("이평선 업데이트 오류, 계속 진행: {}", error.getMessage());
+              return Mono.empty();
+            })
+        )
         .subscribe();
 
     updateSchedulers.put(condition.getId(), scheduler);
@@ -328,18 +328,18 @@ public class DynamicConditionService {
     long initialDelayMs = initialDelayProvider.apply(updateInterval);
     long periodMs = updateInterval.toMillis();
 
-    Disposable scheduler = Flux.defer(() ->
-            Mono.fromRunnable(() ->
-                updateTrendLineCondition(condition)
-                    .doOnError(error -> log.error("추세선 조건 업데이트 중 오류: {}", condition, error))
-                    .onErrorContinue(
-                        (error, obj) -> log.warn("추세선 업데이트 오류, 계속 진행: {}", error.getMessage()))
-                    .subscribe()
-            )
-        ).repeat()
-        .delayElements(Duration.ofMillis(periodMs))
-        .delaySubscription(Duration.ofMillis(initialDelayMs))
-        .subscribeOn(reactor.core.scheduler.Schedulers.fromExecutor(this.scheduler))
+    Disposable scheduler = Flux.interval(
+            Duration.ofMillis(initialDelayMs),
+            Duration.ofMillis(periodMs),
+            reactor.core.scheduler.Schedulers.fromExecutor(this.scheduler)
+        )
+        .flatMap(tick -> updateTrendLineCondition(condition)
+            .doOnError(error -> log.error("추세선 조건 업데이트 중 오류: {}", condition, error))
+            .onErrorResume(error -> {
+              log.warn("추세선 업데이트 오류, 계속 진행: {}", error.getMessage());
+              return Mono.empty();
+            })
+        )
         .subscribe();
 
     updateSchedulers.put(condition.getId(), scheduler);

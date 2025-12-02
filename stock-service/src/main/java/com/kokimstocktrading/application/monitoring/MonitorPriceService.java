@@ -173,7 +173,7 @@ public class MonitorPriceService {
    * 개별 종목 모니터링 시작
    */
   public void startMonitoring(String stockCode) {
-    if (!stockConditions.containsKey(stockCode)) {
+    if (stockConditions.containsKey(stockCode)) {
       log.warn("종목 {}에 대한 가격 조건이 등록되지 않았습니다.", stockCode);
       return;
     }
