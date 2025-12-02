@@ -181,7 +181,7 @@ spring:
   config:
     activate:
       on-profile: test
-
+    import: optional:classpath:secretkey.properties
   # H2 in-memory 데이터베이스 (테스트용)
   datasource:
     url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
