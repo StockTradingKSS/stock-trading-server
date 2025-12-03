@@ -102,8 +102,6 @@ public class DsqlConfig {
   @Scheduled(fixedRateString = "${app.dsql.token.refresh-interval:600000}") // 10분마다 토큰 갱신
   public void generateToken() {
     try {
-      log.info("DSQL IAM 토큰 생성 시작 - Region: {}, User: {}", region, dsqlUser);
-
       DsqlUtilities utilities = getDsqlUtilities();
 
       final Consumer<GenerateAuthTokenRequest.Builder> requester = builder -> builder
@@ -120,7 +118,6 @@ public class DsqlConfig {
 
       if (dataSource != null) {
         dataSource.setPassword(token);
-        log.info("DSQL IAM 토큰 생성 완료 (ECS Task Role 사용)");
       }
 
     } catch (Exception e) {
