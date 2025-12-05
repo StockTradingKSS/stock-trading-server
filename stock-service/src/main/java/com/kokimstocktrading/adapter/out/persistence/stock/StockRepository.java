@@ -23,70 +23,83 @@ public interface StockRepository extends JpaRepository<StockEntity, String> {
   List<StockEntity> findByNameIgnoreCase(@Param("name") String name);
 
   /**
-   * UPSERT를 위한 네이티브 쿼리 기존 데이터가 있으면 업데이트, 없으면 삽입
-   */
-  @Modifying
-  @Query(value = """
-      INSERT INTO stock_trading.stock (
-          code, name, list_count, audit_info, reg_day, state, 
-          market_code, market_name, up_name, up_size_name, 
-          company_class_name, order_warning, nxt_enable
-      ) VALUES (
-          :#{#stock.code}, :#{#stock.name}, :#{#stock.listCount}, 
-          :#{#stock.auditInfo}, :#{#stock.regDay}, :#{#stock.state},
-          :#{#stock.marketCode}, :#{#stock.marketName}, :#{#stock.upName},
-          :#{#stock.upSizeName}, :#{#stock.companyClassName}, 
-          :#{#stock.orderWarning}, :#{#stock.nxtEnable}
-      )
-      ON CONFLICT (code) DO UPDATE SET
-          name = EXCLUDED.name,
-          list_count = EXCLUDED.list_count,
-          audit_info = EXCLUDED.audit_info,
-          reg_day = EXCLUDED.reg_day,
-          state = EXCLUDED.state,
-          market_code = EXCLUDED.market_code,
-          market_name = EXCLUDED.market_name,
-          up_name = EXCLUDED.up_name,
-          up_size_name = EXCLUDED.up_size_name,
-          company_class_name = EXCLUDED.company_class_name,
-          order_warning = EXCLUDED.order_warning,
-          nxt_enable = EXCLUDED.nxt_enable
-      """, nativeQuery = true)
-  void upsertStock(@Param("stock") StockEntity stock);
-
-  /**
    * 배치 UPSERT를 위한 네이티브 쿼리
+   * audit_info는 TEXT로 CAST하여 bytea 타입 문제 해결
    */
   @Modifying
   @Query(value = """
-      INSERT INTO stock_trading.stock (
-          code, name, list_count, audit_info, reg_day, state, 
-          market_code, market_name, up_name, up_size_name, 
-          company_class_name, order_warning, nxt_enable
-      ) 
-      SELECT * FROM UNNEST(
-          :codes, :names, :listCounts, :auditInfos, :regDays, :states,
-          :marketCodes, :marketNames, :upNames, :upSizeNames,
-          :companyClassNames, :orderWarnings, :nxtEnables
-      ) AS t(
-          code, name, list_count, audit_info, reg_day, state,
-          market_code, market_name, up_name, up_size_name,
-          company_class_name, order_warning, nxt_enable
-      )
-      ON CONFLICT (code) DO UPDATE SET
-          name = EXCLUDED.name,
-          list_count = EXCLUDED.list_count,
-          audit_info = EXCLUDED.audit_info,
-          reg_day = EXCLUDED.reg_day,
-          state = EXCLUDED.state,
-          market_code = EXCLUDED.market_code,
-          market_name = EXCLUDED.market_name,
-          up_name = EXCLUDED.up_name,
-          up_size_name = EXCLUDED.up_size_name,
-          company_class_name = EXCLUDED.company_class_name,
-          order_warning = EXCLUDED.order_warning,
-          nxt_enable = EXCLUDED.nxt_enable
-      """, nativeQuery = true)
+    INSERT INTO stock (
+        code,
+        name,
+        list_count,
+        audit_info,
+        reg_day,
+        state,
+        market_code,
+        market_name,
+        up_name,
+        up_size_name,
+        company_class_name,
+        order_warning,
+        nxt_enable
+    )
+    SELECT 
+        t.code,
+        t.name,
+        t.list_count,
+        t.audit_info,
+        t.reg_day,
+        t.state,
+        t.market_code,
+        t.market_name,
+        t.up_name,
+        t.up_size_name,
+        t.company_class_name,
+        t.order_warning,
+        t.nxt_enable
+    FROM UNNEST(
+        CAST(:codes AS text[]),
+        CAST(:names AS text[]),
+        CAST(:listCounts AS bigint[]),
+        CAST(:auditInfos AS text[]),
+        CAST(:regDays AS text[]),
+        CAST(:states AS text[]),
+        CAST(:marketCodes AS text[]),
+        CAST(:marketNames AS text[]),
+        CAST(:upNames AS text[]),
+        CAST(:upSizeNames AS text[]),
+        CAST(:companyClassNames AS text[]),
+        CAST(:orderWarnings AS text[]),
+        CAST(:nxtEnables AS boolean[])
+    ) AS t(
+        code,
+        name,
+        list_count,
+        audit_info,
+        reg_day,
+        state,
+        market_code,
+        market_name,
+        up_name,
+        up_size_name,
+        company_class_name,
+        order_warning,
+        nxt_enable
+    )
+    ON CONFLICT (code) DO UPDATE SET
+        name               = EXCLUDED.name,
+        list_count         = EXCLUDED.list_count,
+        audit_info         = EXCLUDED.audit_info,
+        reg_day            = EXCLUDED.reg_day,
+        state              = EXCLUDED.state,
+        market_code        = EXCLUDED.market_code,
+        market_name        = EXCLUDED.market_name,
+        up_name            = EXCLUDED.up_name,
+        up_size_name       = EXCLUDED.up_size_name,
+        company_class_name = EXCLUDED.company_class_name,
+        order_warning      = EXCLUDED.order_warning,
+        nxt_enable         = EXCLUDED.nxt_enable
+    """, nativeQuery = true)
   void batchUpsertStocks(
       @Param("codes") String[] codes,
       @Param("names") String[] names,
@@ -102,4 +115,5 @@ public interface StockRepository extends JpaRepository<StockEntity, String> {
       @Param("orderWarnings") String[] orderWarnings,
       @Param("nxtEnables") Boolean[] nxtEnables
   );
+
 }

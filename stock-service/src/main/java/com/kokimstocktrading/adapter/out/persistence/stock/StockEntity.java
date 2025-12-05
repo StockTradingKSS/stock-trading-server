@@ -35,10 +35,10 @@ public class StockEntity {
   @Column(name = "audit_info")
   private String auditInfo;
 
-  @Column(name = "reg_day", length = 20)
+  @Column(name = "reg_day", length = 30)
   private String regDay;
 
-  @Column(name = "state", length = 20)
+  @Column(name = "state", length = 50)
   private String state;
 
   @Column(name = "market_code", length = 20)

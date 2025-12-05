@@ -51,7 +51,7 @@ public class TransactionRetryAspect {
       } catch (ObjectOptimisticLockingFailureException | CannotAcquireLockException e) {
 
         // Rollback the transaction
-        if (status != null) {
+        if (status != null && !status.isCompleted()) {
           transactionManager.rollback(status);
         }
 
@@ -70,6 +70,17 @@ public class TransactionRetryAspect {
           Thread.currentThread().interrupt();
           throw new RuntimeException("Retry interrupted", ie);
         }
+      } catch (Throwable t) {
+        // 다른 예외 발생 시 트랜잭션 롤백 (Connection Leak 방지)
+        if (status != null && !status.isCompleted()) {
+          try {
+            transactionManager.rollback(status);
+            logger.error("Transaction rolled back due to unexpected exception", t);
+          } catch (Exception rollbackEx) {
+            logger.error("Failed to rollback transaction", rollbackEx);
+          }
+        }
+        throw t;
       }
     }
   }

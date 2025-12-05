@@ -36,14 +36,7 @@ public class StockPersistenceAdapter implements SaveStockListPort {
     });
 
     try {
-      // 방법 1: 개별 UPSERT (작은 데이터셋용)
-      if (uniqueStockList.size() <= 1000) {
-        saveUsingIndividualUpsert(uniqueStockList);
-      } else {
-        // 방법 2: 배치 UPSERT (큰 데이터셋용)
-        saveUsingBatchUpsert(uniqueStockList);
-      }
-
+      saveUsingBatchUpsert(uniqueStockList);
       log.info("Successfully saved {} unique stocks using UPSERT", uniqueStockList.size());
     } catch (Exception e) {
       log.error("Error saving stocks: {}", e.getMessage(), e);
@@ -51,45 +44,6 @@ public class StockPersistenceAdapter implements SaveStockListPort {
     }
   }
 
-  /**
-   * 개별 UPSERT 방식 (작은 데이터셋용)
-   */
-  private void saveUsingIndividualUpsert(List<Stock> stockList) {
-    log.info("Starting individual UPSERT for {} stocks", stockList.size());
-    long startTime = System.currentTimeMillis();
-
-    List<StockEntity> stockEntities = stockList.stream()
-        .map(StockEntity::from)
-        .toList();
-
-    int batchSize = 100;
-    int totalBatches = (stockEntities.size() + batchSize - 1) / batchSize;
-    log.info("Processing {} stocks in {} batches of size {}", stockEntities.size(), totalBatches,
-        batchSize);
-
-    for (int i = 0; i < stockEntities.size(); i += batchSize) {
-      int endIndex = Math.min(i + batchSize, stockEntities.size());
-      List<StockEntity> batch = stockEntities.subList(i, endIndex);
-
-      long batchStartTime = System.currentTimeMillis();
-      log.debug("Executing UPSERT batch {}/{} with {} stocks", (i / batchSize + 1), totalBatches,
-          batch.size());
-
-      // 배치로 UPSERT 실행
-      batch.forEach(stock -> {
-        log.trace("Upserting stock: code={}, name={}", stock.getCode(), stock.getName());
-        stockRepository.upsertStock(stock);
-      });
-
-      long batchEndTime = System.currentTimeMillis();
-      log.debug("Batch {}/{} completed in {}ms", (i / batchSize + 1), totalBatches,
-          (batchEndTime - batchStartTime));
-    }
-
-    long endTime = System.currentTimeMillis();
-    log.info("Individual UPSERT completed in {}ms for {} stocks", (endTime - startTime),
-        stockList.size());
-  }
 
   /**
    * 배치 UPSERT 방식 (큰 데이터셋용)
