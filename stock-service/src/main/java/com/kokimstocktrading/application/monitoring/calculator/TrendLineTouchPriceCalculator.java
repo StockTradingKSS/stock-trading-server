@@ -20,7 +20,7 @@ public class TrendLineTouchPriceCalculator {
 
   private final LoadStockCandlePort loadStockCandlePort;
 
-  public Mono<Long> calculateTouchPrice(String stockCode, LocalDateTime toDate, BigDecimal slope,
+  public Mono<Long> calculateTargetPrice(String stockCode, LocalDateTime toDate, BigDecimal slope,
       CandleInterval interval) {
     return loadStockCandlePort.loadStockCandleListBy(stockCode, interval,
             LocalDateTime.now(), toDate)

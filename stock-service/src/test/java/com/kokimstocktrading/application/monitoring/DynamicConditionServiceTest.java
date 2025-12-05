@@ -18,8 +18,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import reactor.core.Disposable;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
@@ -126,7 +124,7 @@ class DynamicConditionServiceTest {
 
         //when
         Long movingAverage = movingAverageTouchPriceCalculator
-                .calculateTouchPrice(stockCode, period, interval)
+                .calculateTargetPrice(stockCode, period, interval)
                 .block();
 
         //then
@@ -324,7 +322,7 @@ class DynamicConditionServiceTest {
 
         //when
         Long trendLinePrice = trendLineTouchPriceCalculator
-                .calculateTouchPrice(stockCode, toDate, slope, interval)
+                .calculateTargetPrice(stockCode, toDate, slope, interval)
                 .block();
 
         //then

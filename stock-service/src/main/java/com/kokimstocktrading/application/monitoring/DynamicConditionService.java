@@ -118,15 +118,15 @@ public class DynamicConditionService {
    */
   private Mono<MovingAverageCondition> initializeMovingAverageCondition(
       MovingAverageCondition condition) {
-    return movingAverageTouchPriceCalculator.calculateTouchPrice(
+    return movingAverageTouchPriceCalculator.calculateTargetPrice(
             condition.getStockCode(), condition.getPeriod(), condition.getInterval())
-        .map(movingAveragePrice -> {
-          PriceCondition priceCondition = condition.createPriceCondition(movingAveragePrice);
+        .map(targetPrice -> {
+          PriceCondition priceCondition = condition.createPriceCondition(targetPrice);
           PriceCondition registered = monitorPriceService.registerPriceCondition(priceCondition);
           condition.setCurrentPriceConditionId(registered.getId());
 
           log.info("초기 이평선 가격 조건 생성: 종목={}, 이평선가격={}, 조건ID={}",
-              condition.getStockCode(), movingAveragePrice, registered.getId());
+              condition.getStockCode(), targetPrice, registered.getId());
 
           return condition;
         });
@@ -186,7 +186,7 @@ public class DynamicConditionService {
    * 이평선 조건 업데이트 (기존 조건 삭제 후 새 조건 생성)
    */
   private Mono<Void> updateMovingAverageCondition(MovingAverageCondition condition) {
-    return movingAverageTouchPriceCalculator.calculateTouchPrice(
+    return movingAverageTouchPriceCalculator.calculateTargetPrice(
             condition.getStockCode(), condition.getPeriod(), condition.getInterval())
         .flatMap(newMovingAveragePrice -> {
           // 기존 PriceCondition 삭제 (currentPriceConditionId 사용)
@@ -303,16 +303,16 @@ public class DynamicConditionService {
    * 추세선 조건 초기화 (첫 번째 PriceCondition 생성)
    */
   private Mono<TrendLineCondition> initializeTrendLineCondition(TrendLineCondition condition) {
-    return trendLineTouchPriceCalculator.calculateTouchPrice(
+    return trendLineTouchPriceCalculator.calculateTargetPrice(
             condition.getStockCode(), condition.getToDate(), condition.getSlope(),
             condition.getInterval())
-        .map(trendLinePrice -> {
-          PriceCondition priceCondition = condition.createPriceCondition(trendLinePrice);
+        .map(targetPrice -> {
+          PriceCondition priceCondition = condition.createPriceCondition(targetPrice);
           PriceCondition registered = monitorPriceService.registerPriceCondition(priceCondition);
           condition.setCurrentPriceConditionId(registered.getId());
 
           log.info("초기 추세선 가격 조건 생성: 종목={}, 추세선가격={}, 조건ID={}",
-              condition.getStockCode(), trendLinePrice, registered.getId());
+              condition.getStockCode(), targetPrice, registered.getId());
 
           return condition;
         });
@@ -351,7 +351,7 @@ public class DynamicConditionService {
    * 추세선 조건 업데이트 (기존 조건 삭제 후 새 조건 생성)
    */
   private Mono<Void> updateTrendLineCondition(TrendLineCondition condition) {
-    return trendLineTouchPriceCalculator.calculateTouchPrice(
+    return trendLineTouchPriceCalculator.calculateTargetPrice(
             condition.getStockCode(), condition.getToDate(), condition.getSlope(),
             condition.getInterval())
         .flatMap(newTrendLinePrice -> {

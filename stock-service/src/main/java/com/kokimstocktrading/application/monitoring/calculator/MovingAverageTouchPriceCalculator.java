@@ -23,7 +23,7 @@ public class MovingAverageTouchPriceCalculator {
 
   private final LoadStockCandlePort loadStockCandlePort;
 
-  public Mono<Long> calculateTouchPrice(String stockCode, int period, CandleInterval interval) {
+  public Mono<Long> calculateTargetPrice(String stockCode, int period, CandleInterval interval) {
     return loadStockCandlePort.loadStockCandleListBy(stockCode, interval,
             LocalDateTime.now(), (long) period)
         .<Long>handle((candles, sink) -> {

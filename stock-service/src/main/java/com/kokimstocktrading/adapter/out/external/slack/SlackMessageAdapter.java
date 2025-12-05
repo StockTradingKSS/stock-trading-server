@@ -48,15 +48,11 @@ public class SlackMessageAdapter implements SendNotificationPort {
     log.info("슬랙 채널 설정 완료: {}", channelName);
   }
 
-  @Override
-  public Mono<Void> sendMessage(String message) {
-    return sendSlackMessage(message);
-  }
-
   /**
    * Slack 메시지 전송 (기본 채널)
    */
-  public Mono<Void> sendSlackMessage(String message) {
+  @Override
+  public Mono<Void> sendMessage(String message) {
     return sendSlackMessage(channelName, message);
   }
 
