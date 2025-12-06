@@ -43,8 +43,15 @@ public class KrxMarketStatusAdapter implements LoadMarketStatusPort {
 
     return requestKrxCalendar(date)
         .map(html -> parseMarketStatus(html, date))
-        .doOnSuccess(status -> log.debug("시장 상태 조회 완료: {} - {}",
-            date, status.isOpen() ? "개장" : "휴장"))
+        .switchIfEmpty(Mono.fromSupplier(() -> {
+          log.warn("KRX API가 빈 응답을 반환했습니다. 날짜: {}. 기본값(개장)을 사용합니다.", date);
+          return MarketStatus.open(date);
+        }))
+        .doOnSuccess(status -> {
+          if (status != null) {
+            log.debug("시장 상태 조회 완료: {} - {}", date, status.isOpen() ? "개장" : "휴장");
+          }
+        })
         .doOnError(error -> log.error("시장 상태 조회 실패: {}", date, error));
   }
 
@@ -66,6 +73,10 @@ public class KrxMarketStatusAdapter implements LoadMarketStatusPort {
         .body(BodyInserters.fromFormData(formData))
         .retrieve()
         .bodyToMono(String.class)
+        .switchIfEmpty(Mono.defer(() -> {
+          log.warn("KRX API 응답이 비어있습니다. 날짜: {}", date);
+          return Mono.empty();
+        }))
         .onErrorMap(error -> new RuntimeException("KRX API 요청 실패", error));
   }
 
