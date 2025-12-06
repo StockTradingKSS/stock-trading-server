@@ -1,6 +1,8 @@
 package com.kokimstocktrading.adapter.out.persistence.stock;
 
+import java.sql.Types;
 import java.util.List;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -101,19 +103,19 @@ public interface StockRepository extends JpaRepository<StockEntity, String> {
         nxt_enable         = EXCLUDED.nxt_enable
     """, nativeQuery = true)
   void batchUpsertStocks(
-      @Param("codes") String[] codes,
-      @Param("names") String[] names,
-      @Param("listCounts") Long[] listCounts,
-      @Param("auditInfos") String[] auditInfos,
-      @Param("regDays") String[] regDays,
-      @Param("states") String[] states,
-      @Param("marketCodes") String[] marketCodes,
-      @Param("marketNames") String[] marketNames,
-      @Param("upNames") String[] upNames,
-      @Param("upSizeNames") String[] upSizeNames,
-      @Param("companyClassNames") String[] companyClassNames,
-      @Param("orderWarnings") String[] orderWarnings,
-      @Param("nxtEnables") Boolean[] nxtEnables
+      @Param("codes") @JdbcTypeCode(Types.ARRAY) String[] codes,
+      @Param("names") @JdbcTypeCode(Types.ARRAY) String[] names,
+      @Param("listCounts") @JdbcTypeCode(Types.ARRAY) Long[] listCounts,
+      @Param("auditInfos") @JdbcTypeCode(Types.ARRAY) String[] auditInfos,
+      @Param("regDays") @JdbcTypeCode(Types.ARRAY) String[] regDays,
+      @Param("states") @JdbcTypeCode(Types.ARRAY) String[] states,
+      @Param("marketCodes") @JdbcTypeCode(Types.ARRAY) String[] marketCodes,
+      @Param("marketNames") @JdbcTypeCode(Types.ARRAY) String[] marketNames,
+      @Param("upNames") @JdbcTypeCode(Types.ARRAY) String[] upNames,
+      @Param("upSizeNames") @JdbcTypeCode(Types.ARRAY) String[] upSizeNames,
+      @Param("companyClassNames") @JdbcTypeCode(Types.ARRAY) String[] companyClassNames,
+      @Param("orderWarnings") @JdbcTypeCode(Types.ARRAY) String[] orderWarnings,
+      @Param("nxtEnables") @JdbcTypeCode(Types.ARRAY) Boolean[] nxtEnables
   );
 
 }
