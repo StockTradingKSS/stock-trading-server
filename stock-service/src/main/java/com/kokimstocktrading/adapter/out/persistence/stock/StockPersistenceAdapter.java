@@ -19,7 +19,6 @@ public class StockPersistenceAdapter implements SaveStockListPort {
   private final StockRepository stockRepository;
 
   @Override
-  @Transactional
   public void saveStockList(List<Stock> stockList) {
     log.info("Saving {} stocks to database using UPSERT", stockList.size());
 
@@ -56,38 +55,51 @@ public class StockPersistenceAdapter implements SaveStockListPort {
         .map(StockEntity::from)
         .toList();
 
-    log.debug("Converting {} stock entities to arrays", stockEntities.size());
+    // 청크 크기 설정 (PostgreSQL 트랜잭션 행 제한을 피하기 위해)
+    int chunkSize = 500;
+    int totalChunks = (int) Math.ceil((double) stockEntities.size() / chunkSize);
 
-    // 배열로 변환
-    String[] codes = stockEntities.stream().map(StockEntity::getCode).toArray(String[]::new);
-    String[] names = stockEntities.stream().map(StockEntity::getName).toArray(String[]::new);
-    Long[] listCounts = stockEntities.stream().map(StockEntity::getListCount).toArray(Long[]::new);
-    String[] auditInfos = stockEntities.stream().map(StockEntity::getAuditInfo)
-        .toArray(String[]::new);
-    String[] regDays = stockEntities.stream().map(StockEntity::getRegDay).toArray(String[]::new);
-    String[] states = stockEntities.stream().map(StockEntity::getState).toArray(String[]::new);
-    String[] marketCodes = stockEntities.stream().map(StockEntity::getMarketCode)
-        .toArray(String[]::new);
-    String[] marketNames = stockEntities.stream().map(StockEntity::getMarketName)
-        .toArray(String[]::new);
-    String[] upNames = stockEntities.stream().map(StockEntity::getUpName).toArray(String[]::new);
-    String[] upSizeNames = stockEntities.stream().map(StockEntity::getUpSizeName)
-        .toArray(String[]::new);
-    String[] companyClassNames = stockEntities.stream().map(StockEntity::getCompanyClassName)
-        .toArray(String[]::new);
-    String[] orderWarnings = stockEntities.stream().map(StockEntity::getOrderWarning)
-        .toArray(String[]::new);
-    Boolean[] nxtEnables = stockEntities.stream().map(StockEntity::isNxtEnable)
-        .toArray(Boolean[]::new);
+    log.info("Processing {} stocks in {} chunks of size {}", stockEntities.size(), totalChunks, chunkSize);
 
-    log.debug("Executing batch UPSERT with {} stocks", stockEntities.size());
+    // 청크로 나눠서 처리
+    for (int i = 0; i < stockEntities.size(); i += chunkSize) {
+      int end = Math.min(i + chunkSize, stockEntities.size());
+      List<StockEntity> chunk = stockEntities.subList(i, end);
 
-    // 배치 UPSERT 실행
-    stockRepository.batchUpsertStocks(
-        codes, names, listCounts, auditInfos, regDays, states,
-        marketCodes, marketNames, upNames, upSizeNames,
-        companyClassNames, orderWarnings, nxtEnables
-    );
+      int chunkNumber = (i / chunkSize) + 1;
+      log.debug("Processing chunk {}/{} ({} stocks)", chunkNumber, totalChunks, chunk.size());
+
+      // 배열로 변환
+      String[] codes = chunk.stream().map(StockEntity::getCode).toArray(String[]::new);
+      String[] names = chunk.stream().map(StockEntity::getName).toArray(String[]::new);
+      Long[] listCounts = chunk.stream().map(StockEntity::getListCount).toArray(Long[]::new);
+      String[] auditInfos = chunk.stream().map(StockEntity::getAuditInfo)
+          .toArray(String[]::new);
+      String[] regDays = chunk.stream().map(StockEntity::getRegDay).toArray(String[]::new);
+      String[] states = chunk.stream().map(StockEntity::getState).toArray(String[]::new);
+      String[] marketCodes = chunk.stream().map(StockEntity::getMarketCode)
+          .toArray(String[]::new);
+      String[] marketNames = chunk.stream().map(StockEntity::getMarketName)
+          .toArray(String[]::new);
+      String[] upNames = chunk.stream().map(StockEntity::getUpName).toArray(String[]::new);
+      String[] upSizeNames = chunk.stream().map(StockEntity::getUpSizeName)
+          .toArray(String[]::new);
+      String[] companyClassNames = chunk.stream().map(StockEntity::getCompanyClassName)
+          .toArray(String[]::new);
+      String[] orderWarnings = chunk.stream().map(StockEntity::getOrderWarning)
+          .toArray(String[]::new);
+      Boolean[] nxtEnables = chunk.stream().map(StockEntity::isNxtEnable)
+          .toArray(Boolean[]::new);
+
+      // 배치 UPSERT 실행
+      stockRepository.batchUpsertStocks(
+          codes, names, listCounts, auditInfos, regDays, states,
+          marketCodes, marketNames, upNames, upSizeNames,
+          companyClassNames, orderWarnings, nxtEnables
+      );
+
+      log.debug("Completed chunk {}/{}", chunkNumber, totalChunks);
+    }
 
     long endTime = System.currentTimeMillis();
     log.info("Batch UPSERT completed in {}ms for {} stocks", (endTime - startTime),
