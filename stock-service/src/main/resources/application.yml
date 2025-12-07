@@ -164,8 +164,6 @@ app:
 logging:
   level:
     org.springframework.sql.init: WARN
-    com.KimStock.config.com.KimStock.adapter.out.persistence.config.DsqlConfig: INFO
-    com.KimStock.config.com.KimStock.adapter.out.persistence.config.DsqlExceptionOverride: INFO
     # DSQL 관련 로깅
     software.amazon.dsql: WARN
     org.hibernate.type.descriptor.sql.BasicBinder: WARN
