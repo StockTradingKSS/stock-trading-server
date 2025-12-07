@@ -4,11 +4,12 @@ import com.kokimstocktrading.domain.user.User;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Schema(description = "사용자 응답")
 public record UserResponse(
     @Schema(description = "사용자 ID")
-    Long id,
+    UUID id,
 
     @Schema(description = "사용자명")
     String username,

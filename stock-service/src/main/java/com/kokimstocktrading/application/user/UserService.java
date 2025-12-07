@@ -10,6 +10,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * User Service
@@ -49,7 +50,7 @@ public class UserService implements RegisterUserUseCase, GetUserUseCase,
     }
 
     @Override
-    public User getUserById(Long id) {
+    public User getUserById(UUID id) {
         return loadUserPort.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + id));
     }
@@ -66,7 +67,7 @@ public class UserService implements RegisterUserUseCase, GetUserUseCase,
     }
 
     @Override
-    public User updateUser(Long id, UpdateUserCommand command) {
+    public User updateUser(UUID id, UpdateUserCommand command) {
         log.info("사용자 정보 수정: {}", id);
 
         User existingUser = loadUserPort.findById(id)
@@ -94,7 +95,7 @@ public class UserService implements RegisterUserUseCase, GetUserUseCase,
     }
 
     @Override
-    public void deleteUser(Long id) {
+    public void deleteUser(UUID id) {
         log.info("사용자 삭제: {}", id);
 
         loadUserPort.findById(id)

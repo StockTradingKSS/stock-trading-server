@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * User Management Controller
@@ -51,7 +52,7 @@ public class UserController {
     @Authorize
     @SecurityRequirement(name = "bearer-token")
     @Operation(summary = "사용자 조회", description = "ID로 사용자를 조회합니다")
-    public UserResponse getUser(@PathVariable Long id) {
+    public UserResponse getUser(@PathVariable UUID id) {
         log.info("사용자 조회: {}", id);
 
         return UserResponse.from(getUserUseCase.getUserById(id));
@@ -73,7 +74,7 @@ public class UserController {
     @Authorize
     @SecurityRequirement(name = "bearer-token")
     @Operation(summary = "사용자 수정", description = "사용자 정보를 수정합니다")
-    public UserResponse updateUser(@PathVariable Long id,
+    public UserResponse updateUser(@PathVariable UUID id,
                                     @RequestBody UpdateUserRequest request) {
         log.info("사용자 정보 수정: {}", id);
 
@@ -91,7 +92,7 @@ public class UserController {
     @SecurityRequirement(name = "bearer-token")
     @Operation(summary = "사용자 삭제", description = "사용자를 삭제합니다 (관리자 전용)")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteUser(@PathVariable Long id) {
+    public void deleteUser(@PathVariable UUID id) {
         log.info("사용자 삭제: {}", id);
 
         deleteUserUseCase.deleteUser(id);

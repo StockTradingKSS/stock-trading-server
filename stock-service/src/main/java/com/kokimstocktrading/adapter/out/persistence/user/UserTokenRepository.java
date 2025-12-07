@@ -8,12 +8,13 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * UserToken JPA 리포지토리
  */
 @Repository
-public interface UserTokenRepository extends JpaRepository<UserTokenEntity, Long> {
+public interface UserTokenRepository extends JpaRepository<UserTokenEntity, UUID> {
 
     Optional<UserTokenEntity> findByToken(String token);
 
@@ -21,7 +22,7 @@ public interface UserTokenRepository extends JpaRepository<UserTokenEntity, Long
 
     void deleteByToken(String token);
 
-    void deleteAllByUserId(Long userId);
+    void deleteAllByUserId(UUID userId);
 
     /**
      * 만료된 토큰 삭제 (정리 작업)

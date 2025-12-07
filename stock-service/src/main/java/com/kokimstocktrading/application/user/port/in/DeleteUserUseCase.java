@@ -1,5 +1,7 @@
 package com.kokimstocktrading.application.user.port.in;
 
+import java.util.UUID;
+
 public interface DeleteUserUseCase {
-    void deleteUser(Long id);
+    void deleteUser(UUID id);
 }

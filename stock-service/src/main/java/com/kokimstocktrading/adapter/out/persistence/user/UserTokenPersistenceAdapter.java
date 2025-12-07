@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * UserToken Persistence Adapter
@@ -49,7 +50,7 @@ public class UserTokenPersistenceAdapter implements SaveTokenPort, LoadTokenPort
 
     @Override
     @Transactional
-    public void deleteAllByUserId(Long userId) {
+    public void deleteAllByUserId(UUID userId) {
         userTokenRepository.deleteAllByUserId(userId);
     }
 }

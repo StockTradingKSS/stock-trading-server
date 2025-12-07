@@ -1,8 +1,8 @@
-package com.kokimstocktrading.adapter.out.persistence.entity;
+package com.kokimstocktrading.adapter.out.persistence.tradingcondition;
 
 import com.kokimstocktrading.domain.candle.CandleInterval;
-import com.kokimstocktrading.domain.monitoring.MovingAverageCondition;
 import com.kokimstocktrading.domain.monitoring.TouchDirection;
+import com.kokimstocktrading.domain.monitoring.TrendLineCondition;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -10,6 +10,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.AccessLevel;
@@ -19,17 +20,17 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 /**
- * 이평선 조건 엔티티 이동평균선 기반 거래 조건을 저장
+ * 추세선 조건 엔티티 추세선 기반 거래 조건을 저장
  */
 @Entity
-@Table(name = "moving_average_conditions", indexes = {
-    @Index(name = "idx_stock_code", columnList = "stock_code"),
-    @Index(name = "idx_is_active", columnList = "is_active"),
-    @Index(name = "idx_stock_code_active", columnList = "stock_code, is_active")
+@Table(name = "trend_line_conditions", indexes = {
+    @Index(name = "idx_tl_stock_code", columnList = "stock_code"),
+    @Index(name = "idx_tl_is_active", columnList = "is_active"),
+    @Index(name = "idx_tl_stock_code_active", columnList = "stock_code, is_active")
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class MovingAverageConditionEntity {
+public class TrendLineConditionEntity {
 
   /**
    * 조건 고유 ID (UUID)
@@ -45,10 +46,16 @@ public class MovingAverageConditionEntity {
   private String stockCode;
 
   /**
-   * 이평선 기간 (예: 20일선이면 20)
+   * 추세선 끝점 날짜
    */
-  @Column(name = "period", nullable = false)
-  private Integer period;
+  @Column(name = "to_date", nullable = false)
+  private LocalDateTime toDate;
+
+  /**
+   * 추세선 기울기
+   */
+  @Column(name = "slope", nullable = false, precision = 19, scale = 4)
+  private BigDecimal slope;
 
   /**
    * 캔들 간격 (분/일/주/월/년)
@@ -93,17 +100,19 @@ public class MovingAverageConditionEntity {
   /**
    * 정적 팩토리 메서드 - 새 조건 생성
    */
-  public static MovingAverageConditionEntity create(
+  public static TrendLineConditionEntity create(
       String stockCode,
-      Integer period,
+      LocalDateTime toDate,
+      BigDecimal slope,
       CandleInterval interval,
       TouchDirection touchDirection,
       String description
   ) {
-    MovingAverageConditionEntity entity = new MovingAverageConditionEntity();
+    TrendLineConditionEntity entity = new TrendLineConditionEntity();
     entity.id = UUID.randomUUID();
     entity.stockCode = stockCode;
-    entity.period = period;
+    entity.toDate = toDate;
+    entity.slope = slope;
     entity.interval = interval;
     entity.touchDirection = touchDirection;
     entity.description = description;
@@ -131,11 +140,12 @@ public class MovingAverageConditionEntity {
    * @param callback 조건 만족 시 실행할 콜백 (DB에 저장 불가하므로 별도 주입)
    * @return 도메인 객체
    */
-  public MovingAverageCondition toDomain(Runnable callback) {
-    return new MovingAverageCondition(
+  public TrendLineCondition toDomain(Runnable callback) {
+    return new TrendLineCondition(
         this.id,
         this.stockCode,
-        this.period,
+        this.toDate,
+        this.slope,
         this.interval,
         this.touchDirection,
         callback,

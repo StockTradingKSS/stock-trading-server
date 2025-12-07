@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * User Persistence Adapter
@@ -32,7 +33,7 @@ public class UserPersistenceAdapter implements SaveUserPort, LoadUserPort,
     }
 
     @Override
-    public Optional<User> findById(Long id) {
+    public Optional<User> findById(UUID id) {
         return userRepository.findById(id)
             .map(UserEntity::toDomain);
     }
@@ -57,13 +58,13 @@ public class UserPersistenceAdapter implements SaveUserPort, LoadUserPort,
 
     @Override
     @Transactional
-    public void deleteById(Long id) {
+    public void deleteById(UUID id) {
         userRepository.deleteById(id);
     }
 
     @Override
     @Transactional
-    public void updateLastLogin(Long userId, LocalDateTime lastLogin) {
+    public void updateLastLogin(UUID userId, LocalDateTime lastLogin) {
         userRepository.updateLastLogin(userId, lastLogin);
     }
 }

@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 /**
  * UserToken 도메인 모델
@@ -14,8 +15,8 @@ import java.time.LocalDateTime;
 @Getter
 @AllArgsConstructor(access = lombok.AccessLevel.PRIVATE)
 public class UserToken {
-    private Long id;
-    private Long userId;
+    private UUID id;
+    private UUID userId;
     private String token;
     private LocalDateTime createdAt;
     private LocalDateTime expiresAt;

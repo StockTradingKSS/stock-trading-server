@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 /**
  * User 도메인 모델
@@ -14,7 +15,7 @@ import java.time.LocalDateTime;
 @Getter
 @AllArgsConstructor(access = lombok.AccessLevel.PRIVATE)
 public class User {
-    private Long id;
+    private UUID id;
     private String username;       // 로그인용 고유 식별자
     private String password;       // BCrypt 암호화된 비밀번호
     private String email;

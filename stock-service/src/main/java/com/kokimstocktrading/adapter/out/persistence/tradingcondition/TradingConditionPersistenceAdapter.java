@@ -1,9 +1,5 @@
-package com.kokimstocktrading.adapter.out.persistence;
+package com.kokimstocktrading.adapter.out.persistence.tradingcondition;
 
-import com.kokimstocktrading.adapter.out.persistence.entity.MovingAverageConditionEntity;
-import com.kokimstocktrading.adapter.out.persistence.entity.TrendLineConditionEntity;
-import com.kokimstocktrading.adapter.out.persistence.repository.MovingAverageConditionRepository;
-import com.kokimstocktrading.adapter.out.persistence.repository.TrendLineConditionRepository;
 import com.kokimstocktrading.application.condition.port.out.SaveTradingConditionPort;
 import com.kokimstocktrading.domain.monitoring.MovingAverageCondition;
 import com.kokimstocktrading.domain.monitoring.TrendLineCondition;

@@ -17,6 +17,7 @@ import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import java.util.Arrays;
+import java.util.UUID;
 
 /**
  * Authorization Interceptor
@@ -69,7 +70,7 @@ public class AuthorizationInterceptor implements HandlerInterceptor {
             }
 
             // 토큰에서 사용자 정보 추출
-            Long userId = jwtTokenProvider.getUserId(token);
+            UUID userId = jwtTokenProvider.getUserId(token);
             String username = jwtTokenProvider.getUsername(token);
             Role userRole = jwtTokenProvider.getRole(token);
 

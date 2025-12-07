@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
+import java.util.UUID;
 
 /**
  * JWT Token Provider
@@ -35,13 +36,13 @@ public class JwtTokenProvider {
     /**
      * 인증된 사용자를 위한 JWT 토큰 생성
      */
-    public String generateToken(Long userId, String username, Role role) {
+    public String generateToken(UUID userId, String username, Role role) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expiration);
 
         return Jwts.builder()
             .subject(username)
-            .claim("userId", userId)
+            .claim("userId", userId.toString())
             .claim("role", role.name())
             .issuedAt(now)
             .expiration(expiryDate)
@@ -92,8 +93,9 @@ public class JwtTokenProvider {
     /**
      * JWT 토큰에서 사용자 ID 추출
      */
-    public Long getUserId(String token) {
-        return getClaims(token).get("userId", Long.class);
+    public UUID getUserId(String token) {
+        String userIdStr = getClaims(token).get("userId", String.class);
+        return UUID.fromString(userIdStr);
     }
 
     /**

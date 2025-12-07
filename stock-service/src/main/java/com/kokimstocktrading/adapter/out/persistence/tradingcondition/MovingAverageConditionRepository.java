@@ -1,6 +1,5 @@
-package com.kokimstocktrading.adapter.out.persistence.repository;
+package com.kokimstocktrading.adapter.out.persistence.tradingcondition;
 
-import com.kokimstocktrading.adapter.out.persistence.entity.MovingAverageConditionEntity;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;

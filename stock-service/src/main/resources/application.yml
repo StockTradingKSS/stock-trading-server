@@ -107,7 +107,7 @@ spring:
     # Aurora DSQL Hibernate Dialect 사용
     database-platform: software.amazon.dsql.hibernate.dialect.AuroraDSQLDialect
     hibernate:
-      ddl-auto: validate
+      ddl-auto: none  # DSQL에서는 스키마 자동 관리 비활성화
     properties:
       hibernate:
         # DSQL 전용 설정
