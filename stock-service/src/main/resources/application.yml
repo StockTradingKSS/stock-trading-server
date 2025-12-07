@@ -52,6 +52,11 @@ kiwoom:
   websocket:
     url: wss://api.kiwoom.com:10000/api/dostk/websocket
 
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:1a8001349f7e82b7bc3091b9eac3fa170a912a6699269bb5625f6e6707d4d988}
+  expiration: 86400000  # 24 hours in milliseconds
+
 ---
 # 로컬 개발 환경 설정
 spring:

@@ -51,6 +51,7 @@ jobs:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           KIWOOM_API_APP_KEY: ${{ secrets.KIWOOM_API_APP_KEY }}
           KIWOOM_API_APP_SECRET: ${{ secrets.KIWOOM_API_APP_SECRET }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: ./gradlew :stock-service:clean :stock-service:build
 
       - name: Configure AWS credentials
@@ -97,12 +98,13 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: |
           # Validate all required secrets
           REQUIRED_SECRETS=("DSQL_ENDPOINT" "DSQL_USER" "DSQL_DATABASE" "DSQL_REGION"
                            "KIWOOM_API_APP_KEY" "KIWOOM_API_APP_SECRET"
                            "AWS_ACCESS_KEY_ID" "AWS_SECRET_ACCESS_KEY"
-                           "SLACK_BOT_TOKEN")
+                           "SLACK_BOT_TOKEN" "JWT_SECRET")
           
           MISSING_SECRETS=()
           for secret in "${REQUIRED_SECRETS[@]}"; do
@@ -133,6 +135,7 @@ jobs:
           KIWOOM_API_APP_KEY: ${{ secrets.KIWOOM_API_APP_KEY }}
           KIWOOM_API_APP_SECRET: ${{ secrets.KIWOOM_API_APP_SECRET }}
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: |
 
           # Copy base task definition
