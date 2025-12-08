@@ -1,18 +1,22 @@
 package com.kokimstocktrading.adapter.out.persistence.user;
 
 import com.kokimstocktrading.domain.user.UserToken;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
+import java.time.LocalDateTime;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-import java.util.UUID;
-
 /**
- * UserToken JPA 엔티티
- * 세션 관리를 위한 활성 JWT 토큰 저장
+ * UserToken JPA 엔티티 세션 관리를 위한 활성 JWT 토큰 저장
  */
 @Entity
 @Table(name = "user_tokens", indexes = {
@@ -26,45 +30,45 @@ import java.util.UUID;
 @AllArgsConstructor
 public class UserTokenEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.UUID)
+  private UUID id;
 
-    @Column(name = "user_id", nullable = false)
-    private UUID userId;
+  @Column(name = "user_id", nullable = false)
+  private UUID userId;
 
-    @Column(name = "token", nullable = false, unique = true, length = 500)
-    private String token;
+  @Column(name = "token", nullable = false, unique = true, length = 500)
+  private String token;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+  @Column(name = "created_at", nullable = false, updatable = false)
+  private LocalDateTime createdAt;
 
-    @Column(name = "expires_at", nullable = false)
-    private LocalDateTime expiresAt;
+  @Column(name = "expires_at", nullable = false)
+  private LocalDateTime expiresAt;
 
-    /**
-     * 정적 팩토리 메서드: 도메인 -> 엔티티
-     */
-    public static UserTokenEntity from(UserToken userToken) {
-        return UserTokenEntity.builder()
-            .id(userToken.getId())
-            .userId(userToken.getUserId())
-            .token(userToken.getToken())
-            .createdAt(userToken.getCreatedAt())
-            .expiresAt(userToken.getExpiresAt())
-            .build();
-    }
+  /**
+   * 정적 팩토리 메서드: 도메인 -> 엔티티
+   */
+  public static UserTokenEntity from(UserToken userToken) {
+    return UserTokenEntity.builder()
+        .id(userToken.getId())
+        .userId(userToken.getUserId())
+        .token(userToken.getToken())
+        .createdAt(userToken.getCreatedAt())
+        .expiresAt(userToken.getExpiresAt())
+        .build();
+  }
 
-    /**
-     * 도메인 변환: 엔티티 -> 도메인
-     */
-    public UserToken toDomain() {
-        return UserToken.builder()
-            .id(this.id)
-            .userId(this.userId)
-            .token(this.token)
-            .createdAt(this.createdAt)
-            .expiresAt(this.expiresAt)
-            .build();
-    }
+  /**
+   * 도메인 변환: 엔티티 -> 도메인
+   */
+  public UserToken toDomain() {
+    return UserToken.builder()
+        .id(this.id)
+        .userId(this.userId)
+        .token(this.token)
+        .createdAt(this.createdAt)
+        .expiresAt(this.expiresAt)
+        .build();
+  }
 }

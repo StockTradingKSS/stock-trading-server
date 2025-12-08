@@ -15,4 +15,6 @@ public record SignupRequest(
 
     @Schema(description = "이름", example = "김철수")
     String name
-) {}
+) {
+
+}

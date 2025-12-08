@@ -19,4 +19,6 @@ public record RegisterUserRequest(
 
     @Schema(description = "역할", example = "TRADER")
     Role role
-) {}
+) {
+
+}

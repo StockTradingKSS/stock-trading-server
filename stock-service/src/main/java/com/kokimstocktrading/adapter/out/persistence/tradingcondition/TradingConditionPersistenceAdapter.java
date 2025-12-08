@@ -34,17 +34,19 @@ public class TradingConditionPersistenceAdapter implements SaveTradingConditionP
     try {
       // 도메인 → 엔티티 변환
       MovingAverageConditionEntity entity = MovingAverageConditionEntity.create(
+          condition.getId(),
           condition.getStockCode(),
           condition.getPeriod(),
           condition.getInterval(),
           condition.getTouchDirection(),
-          condition.getDescription()
+          condition.getDescription(),
+          condition.getStatus()
       );
 
       // DB 저장
       MovingAverageConditionEntity saved = movingAverageConditionRepository.save(entity);
-      log.info("이평선 조건 저장 완료: id={}, stockCode={}, period={}",
-          saved.getId(), saved.getStockCode(), saved.getPeriod());
+      log.info("이평선 조건 저장 완료: id={}, stockCode={}, period={}, status={}",
+          saved.getId(), saved.getStockCode(), saved.getPeriod(), saved.getStatus());
 
       // 엔티티 → 도메인 변환 (원본 callback 유지)
       return saved.toDomain(condition.getCallback());
@@ -65,18 +67,20 @@ public class TradingConditionPersistenceAdapter implements SaveTradingConditionP
     try {
       // 도메인 → 엔티티 변환
       TrendLineConditionEntity entity = TrendLineConditionEntity.create(
+          condition.getId(),
           condition.getStockCode(),
           condition.getToDate(),
           condition.getSlope(),
           condition.getInterval(),
           condition.getTouchDirection(),
-          condition.getDescription()
+          condition.getDescription(),
+          condition.getStatus()
       );
 
       // DB 저장
       TrendLineConditionEntity saved = trendLineConditionRepository.save(entity);
-      log.info("추세선 조건 저장 완료: id={}, stockCode={}, slope={}",
-          saved.getId(), saved.getStockCode(), saved.getSlope());
+      log.info("추세선 조건 저장 완료: id={}, stockCode={}, slope={}, status={}",
+          saved.getId(), saved.getStockCode(), saved.getSlope(), saved.getStatus());
 
       // 엔티티 → 도메인 변환 (원본 callback 유지)
       return saved.toDomain(condition.getCallback());
@@ -87,7 +91,7 @@ public class TradingConditionPersistenceAdapter implements SaveTradingConditionP
   }
 
   /**
-   * 이평선 조건 삭제 (논리 삭제 - 비활성화)
+   * 이평선 조건 삭제 (논리 삭제 - SUCCESS 상태로 변경)
    */
   @Override
   @Transactional
@@ -98,9 +102,9 @@ public class TradingConditionPersistenceAdapter implements SaveTradingConditionP
       movingAverageConditionRepository.findById(conditionId)
           .ifPresentOrElse(
               entity -> {
-                entity.deactivate();
+                entity.markAsSuccess();
                 movingAverageConditionRepository.save(entity);
-                log.info("이평선 조건 비활성화 완료: {}", conditionId);
+                log.info("이평선 조건 SUCCESS 상태로 변경 완료: {}", conditionId);
               },
               () -> log.warn("이평선 조건을 찾을 수 없음: {}", conditionId)
           );
@@ -111,7 +115,7 @@ public class TradingConditionPersistenceAdapter implements SaveTradingConditionP
   }
 
   /**
-   * 추세선 조건 삭제 (논리 삭제 - 비활성화)
+   * 추세선 조건 삭제 (논리 삭제 - SUCCESS 상태로 변경)
    */
   @Override
   @Transactional
@@ -122,9 +126,9 @@ public class TradingConditionPersistenceAdapter implements SaveTradingConditionP
       trendLineConditionRepository.findById(conditionId)
           .ifPresentOrElse(
               entity -> {
-                entity.deactivate();
+                entity.markAsSuccess();
                 trendLineConditionRepository.save(entity);
-                log.info("추세선 조건 비활성화 완료: {}", conditionId);
+                log.info("추세선 조건 SUCCESS 상태로 변경 완료: {}", conditionId);
               },
               () -> log.warn("추세선 조건을 찾을 수 없음: {}", conditionId)
           );
@@ -192,12 +196,12 @@ public class TradingConditionPersistenceAdapter implements SaveTradingConditionP
   }
 
   /**
-   * 모든 활성화된 이평선 조건 조회 NOTE: callback은 빈 Runnable로 반환됨
+   * 모든 START 상태(감시중)인 이평선 조건 조회 NOTE: callback은 빈 Runnable로 반환됨
    */
   @Override
   @Transactional(readOnly = true)
   public List<MovingAverageCondition> findAllActiveMovingAverageConditions() {
-    log.debug("활성화된 이평선 조건 전체 조회 시작");
+    log.debug("START 상태인 이평선 조건 전체 조회 시작");
 
     try {
       List<MovingAverageCondition> result = movingAverageConditionRepository.findAllActive()
@@ -207,21 +211,21 @@ public class TradingConditionPersistenceAdapter implements SaveTradingConditionP
           }))
           .collect(Collectors.toList());
 
-      log.debug("활성화된 이평선 조건 전체 조회 완료: {} 건", result.size());
+      log.debug("START 상태인 이평선 조건 전체 조회 완료: {} 건", result.size());
       return result;
     } catch (Exception e) {
-      log.error("활성화된 이평선 조건 조회 실패", e);
+      log.error("START 상태인 이평선 조건 조회 실패", e);
       throw e;
     }
   }
 
   /**
-   * 모든 활성화된 추세선 조건 조회 NOTE: callback은 빈 Runnable로 반환됨
+   * 모든 START 상태(감시중)인 추세선 조건 조회 NOTE: callback은 빈 Runnable로 반환됨
    */
   @Override
   @Transactional(readOnly = true)
   public List<TrendLineCondition> findAllActiveTrendLineConditions() {
-    log.debug("활성화된 추세선 조건 전체 조회 시작");
+    log.debug("START 상태인 추세선 조건 전체 조회 시작");
 
     try {
       List<TrendLineCondition> result = trendLineConditionRepository.findAllActive()
@@ -231,10 +235,10 @@ public class TradingConditionPersistenceAdapter implements SaveTradingConditionP
           }))
           .collect(Collectors.toList());
 
-      log.debug("활성화된 추세선 조건 전체 조회 완료: {} 건", result.size());
+      log.debug("START 상태인 추세선 조건 전체 조회 완료: {} 건", result.size());
       return result;
     } catch (Exception e) {
-      log.error("활성화된 추세선 조건 조회 실패", e);
+      log.error("START 상태인 추세선 조건 조회 실패", e);
       throw e;
     }
   }

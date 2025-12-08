@@ -11,7 +11,10 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 /**
- * 추세선과 맞닿을 가격 계산기 현재 시간의 추세선과 맞닿을 가격을 구하는 식 즉 현재가격 = 추세선 시작 날짜 + 현재날짜와 시작날짜 사이의 봉 개수 * 기울기
+ * <pre>
+ *  추세선과 맞닿을 가격 계산기 현재 시간의 추세선과 맞닿을 가격을 구하는 식
+ *  즉 현재가격 = 추세선 시작 날짜 + 현재날짜와 시작날짜 사이의 봉 개수 * 기울기
+ * </pre>
  */
 @Component
 @Slf4j

@@ -13,6 +13,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Value;
@@ -251,7 +252,7 @@ public class KiwoomRealTimeQuoteAdapter implements SubscribeRealTimeQuotePort, D
 
   private Map<String, List<String>> groupStocksByGroupNumber(List<String> stockCodes) {
     return stockCodes.stream()
-        .collect(java.util.stream.Collectors.groupingBy(stockGroupMap::get));
+        .collect(Collectors.groupingBy(stockGroupMap::get));
   }
 
   private boolean shouldUnsubscribeGroup(String groupNo, List<String> stocksToRemove) {

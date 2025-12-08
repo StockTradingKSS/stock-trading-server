@@ -12,7 +12,7 @@ import lombok.Setter;
  * 추세선 기반 가격 조건 도메인 모델
  */
 @Getter
-public class TrendLineCondition {
+public class TrendLineCondition implements Condition {
 
   private final UUID id;
   private final String stockCode;
@@ -27,21 +27,33 @@ public class TrendLineCondition {
   @Setter
   private UUID currentPriceConditionId;
 
+  // 조건 상태 (START: 감시중, SUCCESS: 조건 달성)
+  @Setter
+  private ConditionStatus status;
+
   public TrendLineCondition(String stockCode, LocalDateTime toDate, BigDecimal slope,
       CandleInterval interval, Runnable callback, TouchDirection touchDirection) {
-    this(stockCode, toDate, slope, interval, touchDirection, callback, null);
+    this(UUID.randomUUID(), stockCode, toDate, slope, interval, touchDirection, callback, null,
+        ConditionStatus.START);
   }
 
   public TrendLineCondition(String stockCode, LocalDateTime toDate, BigDecimal slope,
       CandleInterval interval, TouchDirection touchDirection, Runnable callback,
       String description) {
     this(UUID.randomUUID(), stockCode, toDate, slope, interval, touchDirection, callback,
-        description);
+        description, ConditionStatus.START);
   }
 
   public TrendLineCondition(UUID id, String stockCode, LocalDateTime toDate, BigDecimal slope,
       CandleInterval interval, TouchDirection touchDirection, Runnable callback,
       String description) {
+    this(id, stockCode, toDate, slope, interval, touchDirection, callback, description,
+        ConditionStatus.START);
+  }
+
+  public TrendLineCondition(UUID id, String stockCode, LocalDateTime toDate, BigDecimal slope,
+      CandleInterval interval, TouchDirection touchDirection, Runnable callback,
+      String description, ConditionStatus status) {
     this.touchDirection = touchDirection;
     if (stockCode == null || stockCode.trim().isEmpty()) {
       throw new IllegalArgumentException("종목코드는 필수입니다");
@@ -67,12 +79,13 @@ public class TrendLineCondition {
     this.callback = callback;
     this.description = description != null ? description :
         String.format("%s 추세선(기울기:%.2f) 조건", stockCode, slope);
+    this.status = status != null ? status : ConditionStatus.START;
   }
 
   /**
    * 현재 추세선 가격으로 PriceCondition 생성
    */
-  public PriceCondition createPriceCondition(Long trendLinePrice) {
+  public PriceCondition createPriceCondition(Long trendLinePrice, Runnable additionalCallback) {
     if (trendLinePrice == null || trendLinePrice <= 0) {
       throw new IllegalArgumentException("추세선 가격이 유효하지 않습니다: " + trendLinePrice);
     }
@@ -80,18 +93,21 @@ public class TrendLineCondition {
     String conditionDescription = String.format("%s 추세선(기울기:%.2f, %d원) 도달",
         stockCode, slope, trendLinePrice);
 
-    return new PriceCondition(id, stockCode, trendLinePrice, touchDirection, callback,
+    return new PriceCondition(id, stockCode, trendLinePrice, touchDirection, () -> {
+      callback.run();
+      additionalCallback.run();
+    },
         conditionDescription);
   }
 
   @Override
   public boolean equals(Object o) {
-      if (this == o) {
-          return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-          return false;
-      }
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     TrendLineCondition that = (TrendLineCondition) o;
     return Objects.equals(id, that.id);
   }
@@ -106,5 +122,9 @@ public class TrendLineCondition {
     return String.format(
         "TrendLineCondition{id=%s, stockCode='%s', toDate=%s, slope=%.2f, interval=%s, description='%s'}",
         id, stockCode, toDate, slope, interval, description);
+  }
+
+  public void success() {
+    this.status = ConditionStatus.SUCCESS;
   }
 }

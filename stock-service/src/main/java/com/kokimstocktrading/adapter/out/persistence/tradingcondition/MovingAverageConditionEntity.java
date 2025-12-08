@@ -1,6 +1,7 @@
 package com.kokimstocktrading.adapter.out.persistence.tradingcondition;
 
 import com.kokimstocktrading.domain.candle.CandleInterval;
+import com.kokimstocktrading.domain.monitoring.ConditionStatus;
 import com.kokimstocktrading.domain.monitoring.MovingAverageCondition;
 import com.kokimstocktrading.domain.monitoring.TouchDirection;
 import jakarta.persistence.Column;
@@ -24,8 +25,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 @Entity
 @Table(name = "moving_average_conditions", indexes = {
     @Index(name = "idx_stock_code", columnList = "stock_code"),
-    @Index(name = "idx_is_active", columnList = "is_active"),
-    @Index(name = "idx_stock_code_active", columnList = "stock_code, is_active")
+    @Index(name = "idx_status", columnList = "status"),
+    @Index(name = "idx_stock_code_status", columnList = "stock_code, status")
 })
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -71,10 +72,11 @@ public class MovingAverageConditionEntity {
   private String description;
 
   /**
-   * 활성화 여부
+   * 조건 상태 (START: 감시중, SUCCESS: 조건 달성)
    */
-  @Column(name = "is_active", nullable = false)
-  private Boolean isActive = true;
+  @Enumerated(EnumType.STRING)
+  @Column(name = "status", nullable = false, length = 20)
+  private ConditionStatus status = ConditionStatus.START;
 
   /**
    * 생성 시각
@@ -94,35 +96,37 @@ public class MovingAverageConditionEntity {
    * 정적 팩토리 메서드 - 새 조건 생성
    */
   public static MovingAverageConditionEntity create(
+      UUID id,
       String stockCode,
       Integer period,
       CandleInterval interval,
       TouchDirection touchDirection,
-      String description
+      String description,
+      ConditionStatus status
   ) {
     MovingAverageConditionEntity entity = new MovingAverageConditionEntity();
-    entity.id = UUID.randomUUID();
+    entity.id = id;
     entity.stockCode = stockCode;
     entity.period = period;
     entity.interval = interval;
     entity.touchDirection = touchDirection;
     entity.description = description;
-    entity.isActive = true;
+    entity.status = status;
     return entity;
   }
 
   /**
-   * 조건 비활성화
+   * 조건을 SUCCESS 상태로 변경
    */
-  public void deactivate() {
-    this.isActive = false;
+  public void markAsSuccess() {
+    this.status = ConditionStatus.SUCCESS;
   }
 
   /**
-   * 조건 활성화
+   * 조건을 START 상태로 변경
    */
-  public void activate() {
-    this.isActive = true;
+  public void markAsStart() {
+    this.status = ConditionStatus.START;
   }
 
   /**

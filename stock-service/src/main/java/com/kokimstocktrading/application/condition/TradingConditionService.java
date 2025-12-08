@@ -5,7 +5,7 @@ import com.kokimstocktrading.application.condition.port.in.RegisterTradingCondit
 import com.kokimstocktrading.application.condition.port.in.RegisterTrendLineCommand;
 import com.kokimstocktrading.application.condition.port.out.SaveTradingConditionPort;
 import com.kokimstocktrading.application.condition.port.out.TradingTimePort;
-import com.kokimstocktrading.application.monitoring.DynamicConditionService;
+import com.kokimstocktrading.application.monitoring.dynamiccondition.DynamicConditionService;
 import com.kokimstocktrading.application.notification.port.out.SendNotificationPort;
 import com.kokimstocktrading.domain.monitoring.MovingAverageCondition;
 import com.kokimstocktrading.domain.monitoring.TrendLineCondition;
@@ -57,14 +57,7 @@ public class TradingConditionService implements RegisterTradingConditionUseCase 
     if (tradingTimePort.isTradingTime()) {
       log.info("거래 시간이므로 모니터링 서비스에 등록: {}", savedCondition.getId());
       try {
-        dynamicConditionService.registerMovingAverageCondition(
-            savedCondition.getStockCode(),
-            savedCondition.getPeriod(),
-            savedCondition.getInterval(),
-            savedCondition.getTouchDirection(),
-            savedCondition.getCallback(),
-            savedCondition.getDescription()
-        ).block();
+        dynamicConditionService.registerMovingAverageCondition(savedCondition).block();
         log.info("이평선 조건 모니터링 등록 완료: {}", savedCondition.getId());
       } catch (Exception e) {
         log.error("이평선 조건 모니터링 등록 실패", e);
@@ -102,15 +95,7 @@ public class TradingConditionService implements RegisterTradingConditionUseCase 
     if (tradingTimePort.isTradingTime()) {
       log.info("거래 시간이므로 모니터링 서비스에 등록: {}", savedCondition.getId());
       try {
-        dynamicConditionService.registerTrendLineCondition(
-            savedCondition.getStockCode(),
-            savedCondition.getToDate(),
-            savedCondition.getSlope(),
-            savedCondition.getInterval(),
-            savedCondition.getTouchDirection(),
-            savedCondition.getCallback(),
-            savedCondition.getDescription()
-        ).block();
+        dynamicConditionService.registerTrendLineCondition(savedCondition).block();
         log.info("추세선 조건 모니터링 등록 완료: {}", savedCondition.getId());
       } catch (Exception e) {
         log.error("추세선 조건 모니터링 등록 실패", e);
@@ -202,17 +187,11 @@ public class TradingConditionService implements RegisterTradingConditionUseCase 
           condition.getTouchDirection(),
           () -> handleMovingAverageConditionTriggered(condition.getStockCode(),
               condition.getDescription()),
-          condition.getDescription()
+          condition.getDescription(),
+          condition.getStatus()
       );
 
-      return dynamicConditionService.registerMovingAverageCondition(
-          conditionWithCallback.getStockCode(),
-          conditionWithCallback.getPeriod(),
-          conditionWithCallback.getInterval(),
-          conditionWithCallback.getTouchDirection(),
-          conditionWithCallback.getCallback(),
-          conditionWithCallback.getDescription()
-      );
+      return dynamicConditionService.registerMovingAverageCondition(conditionWithCallback);
     }).then();
 
     // 2. 추세선 조건 등록
@@ -229,18 +208,11 @@ public class TradingConditionService implements RegisterTradingConditionUseCase 
           condition.getTouchDirection(),
           () -> handleTrendLineConditionTriggered(condition.getStockCode(),
               condition.getDescription()),
-          condition.getDescription()
+          condition.getDescription(),
+          condition.getStatus()
       );
 
-      return dynamicConditionService.registerTrendLineCondition(
-          conditionWithCallback.getStockCode(),
-          conditionWithCallback.getToDate(),
-          conditionWithCallback.getSlope(),
-          conditionWithCallback.getInterval(),
-          conditionWithCallback.getTouchDirection(),
-          conditionWithCallback.getCallback(),
-          conditionWithCallback.getDescription()
-      );
+      return dynamicConditionService.registerTrendLineCondition(conditionWithCallback);
     }).then();
 
     return Mono.when(registerMovingAverages, registerTrendLines)

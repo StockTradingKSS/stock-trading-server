@@ -18,4 +18,5 @@ public record MonitoringStatusResponse(
     @Schema(description = "전체 가격 조건 목록")
     List<PriceConditionResponse> conditions
 ) {
+
 }

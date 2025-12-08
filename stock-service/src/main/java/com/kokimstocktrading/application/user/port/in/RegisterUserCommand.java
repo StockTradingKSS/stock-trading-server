@@ -8,4 +8,6 @@ public record RegisterUserCommand(
     String email,
     String name,
     Role role
-) {}
+) {
+
+}

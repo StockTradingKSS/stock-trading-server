@@ -2,7 +2,6 @@ package com.kokimstocktrading.adapter.in.web.user;
 
 import com.kokimstocktrading.domain.user.User;
 import io.swagger.v3.oas.annotations.media.Schema;
-
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -29,15 +28,16 @@ public record UserResponse(
     @Schema(description = "마지막 로그인")
     LocalDateTime lastLogin
 ) {
-    public static UserResponse from(User user) {
-        return new UserResponse(
-            user.getId(),
-            user.getUsername(),
-            user.getEmail(),
-            user.getName(),
-            user.getRole().name(),
-            user.getCreatedAt(),
-            user.getLastLogin()
-        );
-    }
+
+  public static UserResponse from(User user) {
+    return new UserResponse(
+        user.getId(),
+        user.getUsername(),
+        user.getEmail(),
+        user.getName(),
+        user.getRole().name(),
+        user.getCreatedAt(),
+        user.getLastLogin()
+    );
+  }
 }

@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.transaction.annotation.Transactional;
 
 @PersistenceAdapter
 @RequiredArgsConstructor
@@ -59,7 +58,8 @@ public class StockPersistenceAdapter implements SaveStockListPort {
     int chunkSize = 500;
     int totalChunks = (int) Math.ceil((double) stockEntities.size() / chunkSize);
 
-    log.info("Processing {} stocks in {} chunks of size {}", stockEntities.size(), totalChunks, chunkSize);
+    log.info("Processing {} stocks in {} chunks of size {}", stockEntities.size(), totalChunks,
+        chunkSize);
 
     // 청크로 나눠서 처리
     for (int i = 0; i < stockEntities.size(); i += chunkSize) {

@@ -4,12 +4,13 @@ import com.kokimstocktrading.domain.candle.CandleInterval;
 import java.util.Objects;
 import java.util.UUID;
 import lombok.Getter;
+import lombok.Setter;
 
 /**
  * 이평선 기반 가격 조건 도메인 모델
  */
 @Getter
-public class MovingAverageCondition {
+public class MovingAverageCondition implements Condition {
 
   // Getters and Setters
   private final UUID id;
@@ -23,14 +24,25 @@ public class MovingAverageCondition {
   // 현재 활성화된 PriceCondition의 ID (동적으로 업데이트됨)
   private UUID currentPriceConditionId;
 
+  // 조건 상태 (START: 감시중, SUCCESS: 조건 달성)
+  @Setter
+  private ConditionStatus status;
+
   public MovingAverageCondition(UUID uuid, String stockCode, int period, CandleInterval interval,
       Runnable callback, TouchDirection touchDirection) {
-    this(uuid, stockCode, period, interval, touchDirection, callback, null);
+    this(uuid, stockCode, period, interval, touchDirection, callback, null, ConditionStatus.START);
   }
 
   public MovingAverageCondition(UUID uuid, String stockCode, int period, CandleInterval interval,
       TouchDirection touchDirection,
       Runnable callback, String description) {
+    this(uuid, stockCode, period, interval, touchDirection, callback, description,
+        ConditionStatus.START);
+  }
+
+  public MovingAverageCondition(UUID uuid, String stockCode, int period, CandleInterval interval,
+      TouchDirection touchDirection,
+      Runnable callback, String description, ConditionStatus status) {
     if (stockCode == null || stockCode.trim().isEmpty()) {
       throw new IllegalArgumentException("종목코드는 필수입니다");
     }
@@ -55,12 +67,13 @@ public class MovingAverageCondition {
     this.callback = callback;
     this.description = description != null ? description :
         String.format("%s %d%s 이평선 조건", stockCode, period, interval.getDisplayName());
+    this.status = status != null ? status : ConditionStatus.START;
   }
 
   /**
    * 현재 이평선 가격으로 PriceCondition 생성
    */
-  public PriceCondition createPriceCondition(Long movingAveragePrice) {
+  public PriceCondition createPriceCondition(Long movingAveragePrice, Runnable additionalCallback) {
     if (movingAveragePrice == null || movingAveragePrice <= 0) {
       throw new IllegalArgumentException("이평선 가격이 유효하지 않습니다: " + movingAveragePrice);
     }
@@ -70,7 +83,11 @@ public class MovingAverageCondition {
 
     // 새로운 UUID를 생성하여 PriceCondition 생성 (MovingAverageCondition ID와 분리)
     UUID newPriceConditionId = UUID.randomUUID();
-    return new PriceCondition(newPriceConditionId, stockCode, movingAveragePrice, touchDirection, callback,
+    return new PriceCondition(newPriceConditionId, stockCode, movingAveragePrice, touchDirection,
+        () -> {
+          callback.run();
+          additionalCallback.run();
+        },
         conditionDescription);
   }
 
@@ -83,12 +100,12 @@ public class MovingAverageCondition {
 
   @Override
   public boolean equals(Object o) {
-      if (this == o) {
-          return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-          return false;
-      }
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     MovingAverageCondition that = (MovingAverageCondition) o;
     return Objects.equals(id, that.id);
   }
@@ -103,5 +120,9 @@ public class MovingAverageCondition {
     return String.format(
         "MovingAverageCondition{id=%s, stockCode='%s', period=%d, interval=%s, description='%s'}",
         id, stockCode, period, interval, description);
+  }
+
+  public void success() {
+    this.status = ConditionStatus.SUCCESS;
   }
 }

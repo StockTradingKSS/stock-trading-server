@@ -12,4 +12,6 @@ public record UpdateUserRequest(
 
     @Schema(description = "새 비밀번호 (선택사항)", example = "newpassword123")
     String password
-) {}
+) {
+
+}

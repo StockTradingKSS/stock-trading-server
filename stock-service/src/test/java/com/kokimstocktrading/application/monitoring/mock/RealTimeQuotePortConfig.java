@@ -8,9 +8,9 @@ import org.springframework.context.annotation.Primary;
 @TestConfiguration
 public class RealTimeQuotePortConfig {
 
-    @Bean
-    @Primary
-    public SubscribeRealTimeQuotePort subscribeRealTimeQuotePort() {
-        return new MockRealTimeQuoteAdapter();
-    }
+  @Bean
+  @Primary
+  public SubscribeRealTimeQuotePort subscribeRealTimeQuotePort() {
+    return new MockRealTimeQuoteAdapter();
+  }
 }

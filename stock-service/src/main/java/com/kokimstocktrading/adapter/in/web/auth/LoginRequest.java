@@ -9,4 +9,6 @@ public record LoginRequest(
 
     @Schema(description = "비밀번호", example = "password123")
     String password
-) {}
+) {
+
+}

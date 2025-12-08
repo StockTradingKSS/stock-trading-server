@@ -14,14 +14,14 @@ public interface MovingAverageConditionRepository extends
     JpaRepository<MovingAverageConditionEntity, UUID> {
 
   /**
-   * 활성화된 모든 이평선 조건 조회
+   * START 상태인 모든 이평선 조건 조회 (감시중인 조건만)
    */
-  @Query("SELECT m FROM MovingAverageConditionEntity m WHERE m.isActive = true ORDER BY m.createdAt DESC")
+  @Query("SELECT m FROM MovingAverageConditionEntity m WHERE m.status = 'START' ORDER BY m.createdAt DESC")
   List<MovingAverageConditionEntity> findAllActive();
 
   /**
-   * 특정 종목의 활성화된 이평선 조건 조회
+   * 특정 종목의 START 상태인 이평선 조건 조회
    */
-  @Query("SELECT m FROM MovingAverageConditionEntity m WHERE m.stockCode = :stockCode AND m.isActive = true")
+  @Query("SELECT m FROM MovingAverageConditionEntity m WHERE m.stockCode = :stockCode AND m.status = 'START'")
   List<MovingAverageConditionEntity> findActiveByStockCode(String stockCode);
 }

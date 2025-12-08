@@ -3,7 +3,6 @@ package com.kokimstocktrading.adapter.out.persistence.stock;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import java.sql.Array;
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.Session;

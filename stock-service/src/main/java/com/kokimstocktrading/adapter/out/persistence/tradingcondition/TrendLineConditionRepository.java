@@ -14,14 +14,14 @@ public interface TrendLineConditionRepository extends
     JpaRepository<TrendLineConditionEntity, UUID> {
 
   /**
-   * 활성화된 모든 추세선 조건 조회
+   * START 상태인 모든 추세선 조건 조회 (감시중인 조건만)
    */
-  @Query("SELECT t FROM TrendLineConditionEntity t WHERE t.isActive = true ORDER BY t.createdAt DESC")
+  @Query("SELECT t FROM TrendLineConditionEntity t WHERE t.status = 'START' ORDER BY t.createdAt DESC")
   List<TrendLineConditionEntity> findAllActive();
 
   /**
-   * 특정 종목의 활성화된 추세선 조건 조회
+   * 특정 종목의 START 상태인 추세선 조건 조회
    */
-  @Query("SELECT t FROM TrendLineConditionEntity t WHERE t.stockCode = :stockCode AND t.isActive = true")
+  @Query("SELECT t FROM TrendLineConditionEntity t WHERE t.stockCode = :stockCode AND t.status = 'START'")
   List<TrendLineConditionEntity> findActiveByStockCode(String stockCode);
 }

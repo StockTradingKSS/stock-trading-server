@@ -60,10 +60,11 @@ class SlackMessageAdapterTest {
   @Test
   void testMarkdownMessage() {
     String message = "*[거래 조건 알림]*\n"
-        + "• 종목: `005930` (삼성전자)\n"
-        + "• 조건: 20일 이평선 터치\n"
-        + "• 현재가: *75,000원*\n"
-        + "• 시간: " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+                     + "• 종목: `005930` (삼성전자)\n"
+                     + "• 조건: 20일 이평선 터치\n"
+                     + "• 현재가: *75,000원*\n"
+                     + "• 시간: " + LocalDateTime.now()
+                         .format(DateTimeFormatter.ofPattern("HH:mm:ss"));
 
     StepVerifier.create(slackMessageAdapter.sendMessage(message))
         .expectComplete()
@@ -111,20 +112,20 @@ class SlackMessageAdapterTest {
   @DisplayName("긴 메시지 전송 테스트")
   @Test
   void testLongMessage() {
-    StringBuilder longMessage = new StringBuilder("*[상세 거래 알림]*\n\n");
-    longMessage.append("종목: 삼성전자 (005930)\n");
-    longMessage.append("조건: 20일 이평선 상향 돌파\n\n");
-    longMessage.append("*상세 정보:*\n");
-    longMessage.append("• 현재가: 75,000원\n");
-    longMessage.append("• 전일 대비: +2.5%\n");
-    longMessage.append("• 거래량: 1,234,567주\n");
-    longMessage.append("• 20일 이평선: 73,500원\n");
-    longMessage.append("• 60일 이평선: 72,000원\n");
-    longMessage.append("• RSI: 65.3\n");
-    longMessage.append("\n시간: ").append(
-        LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+    String longMessage = "*[상세 거래 알림]*\n\n" + "종목: 삼성전자 (005930)\n"
+                         + "조건: 20일 이평선 상향 돌파\n\n"
+                         + "*상세 정보:*\n"
+                         + "• 현재가: 75,000원\n"
+                         + "• 전일 대비: +2.5%\n"
+                         + "• 거래량: 1,234,567주\n"
+                         + "• 20일 이평선: 73,500원\n"
+                         + "• 60일 이평선: 72,000원\n"
+                         + "• RSI: 65.3\n"
+                         + "\n시간: "
+                         + LocalDateTime.now()
+                             .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
 
-    StepVerifier.create(slackMessageAdapter.sendMessage(longMessage.toString()))
+    StepVerifier.create(slackMessageAdapter.sendMessage(longMessage))
         .expectComplete()
         .verify();
 

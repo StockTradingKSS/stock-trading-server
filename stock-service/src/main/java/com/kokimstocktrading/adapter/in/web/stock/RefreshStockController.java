@@ -1,8 +1,7 @@
 package com.kokimstocktrading.adapter.in.web.stock;
 
+import com.common.Authorize;
 import com.common.WebAdapter;
-import com.kokimstocktrading.adapter.out.persistence.stock.StockEntity;
-import com.kokimstocktrading.adapter.out.persistence.stock.StockRepository;
 import com.kokimstocktrading.application.stock.port.in.RefreshStockUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -21,9 +20,9 @@ import org.springframework.web.bind.annotation.RestController;
 public class RefreshStockController {
 
   private final RefreshStockUseCase refreshStockUseCase;
-  private final StockRepository stockRepository;
 
   @PostMapping("/refresh")
+  @Authorize(roles = {"TRADER", "ADMIN"})
   @Operation(summary = "종목 정보 갱신", description = "종목 정보를 외부 API로 받아와 갱신 합니다.")
   public boolean refreshStock() {
     return refreshStockUseCase.refreshStock();

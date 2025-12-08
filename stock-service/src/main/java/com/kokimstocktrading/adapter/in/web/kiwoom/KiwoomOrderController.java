@@ -1,5 +1,6 @@
 package com.kokimstocktrading.adapter.in.web.kiwoom;
 
+import com.common.Authorize;
 import com.common.WebAdapter;
 import com.kokimstocktrading.application.order.port.out.RequestStockOrderPort;
 import com.kokimstocktrading.domain.order.TradeType;
@@ -27,6 +28,7 @@ public class KiwoomOrderController {
   private final RequestStockOrderPort requestStockOrderPort;
 
   @PostMapping("/buy")
+  @Authorize(roles = {"TRADER", "ADMIN"})
   @Operation(summary = "매수 주문", description = "주식 매수 주문을 실행합니다.")
   public Mono<ResponseEntity<OrderResponse>> buyStock(@Valid @RequestBody OrderRequest request) {
     log.info("매수 주문 요청: {}", request);
@@ -53,6 +55,7 @@ public class KiwoomOrderController {
   }
 
   @PostMapping("/sell")
+  @Authorize(roles = {"TRADER", "ADMIN"})
   @Operation(summary = "매도 주문", description = "주식 매도 주문을 실행합니다.")
   public Mono<ResponseEntity<OrderResponse>> sellStock(@Valid @RequestBody OrderRequest request) {
     log.info("매도 주문 요청: {}", request);
@@ -79,6 +82,7 @@ public class KiwoomOrderController {
   }
 
   @PutMapping("/modify")
+  @Authorize(roles = {"TRADER", "ADMIN"})
   @Operation(summary = "정정 주문", description = "기존 주문을 정정합니다.")
   public Mono<ResponseEntity<OrderResponse>> modifyOrder(
       @Valid @RequestBody OrderModifyRequest request) {
@@ -101,6 +105,7 @@ public class KiwoomOrderController {
   }
 
   @PutMapping("/cancel")
+  @Authorize(roles = {"TRADER", "ADMIN"})
   @Operation(summary = "취소 주문", description = "기존 주문을 취소합니다. quantity가 0이면 전량 취소됩니다.")
   public Mono<ResponseEntity<OrderResponse>> cancelOrder(
       @Valid @RequestBody OrderCancelRequest request) {

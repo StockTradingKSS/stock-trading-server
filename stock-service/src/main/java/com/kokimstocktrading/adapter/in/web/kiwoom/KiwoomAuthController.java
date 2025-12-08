@@ -1,5 +1,6 @@
 package com.kokimstocktrading.adapter.in.web.kiwoom;
 
+import com.common.Authorize;
 import com.common.WebAdapter;
 import com.kokimstocktrading.adapter.out.external.config.kiwoom.auth.KiwoomAuthAdapter;
 import com.kokimstocktrading.adapter.out.external.config.kiwoom.auth.OAuthTokenResponse;
@@ -26,6 +27,7 @@ public class KiwoomAuthController {
   private final KiwoomAuthAdapter kiwoomAuthAdapter;
 
   @PostMapping("/token")
+  @Authorize(roles = {"TRADER", "ADMIN"})
   @Operation(summary = "액세스 토큰 발급", description = "키움증권 API 액세스 토큰을 발급합니다.")
   public Mono<ResponseEntity<OAuthTokenResponse>> getAccessToken() {
     return kiwoomAuthAdapter.requestAccessToken()
@@ -41,6 +43,7 @@ public class KiwoomAuthController {
   }
 
   @PostMapping("/revoke")
+  @Authorize(roles = {"TRADER", "ADMIN"})
   @Operation(summary = "토큰 폐기", description = "발급된 액세스 토큰을 폐기합니다.")
   public Mono<ResponseEntity<Void>> revokeToken() {
     return kiwoomAuthAdapter.revokeToken()

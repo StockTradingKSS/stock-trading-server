@@ -7,8 +7,7 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
- * Web MVC 설정
- * 인터셉터 및 리소스 핸들러 등록
+ * Web MVC 설정 인터셉터 및 리소스 핸들러 등록
  */
 @Configuration
 @RequiredArgsConstructor
