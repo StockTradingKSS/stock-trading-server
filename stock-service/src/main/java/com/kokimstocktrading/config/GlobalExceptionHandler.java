@@ -23,15 +23,13 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler(NoResourceFoundException.class)
   public ResponseEntity<ErrorResponse> handleNoResourceFoundException(NoResourceFoundException ex) {
-    ErrorResponse error = new ErrorResponse("Bad Request", ex.getMessage());
-    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
   }
 
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ErrorResponse> handleGenericException(Exception ex) {
     log.error("예상치 못한 오류 발생", ex);
-    ErrorResponse error = new ErrorResponse("Internal Server Error", "예상치 못한 오류가 발생했습니다");
-    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
   }
 
   public record ErrorResponse(String error, String message) {
