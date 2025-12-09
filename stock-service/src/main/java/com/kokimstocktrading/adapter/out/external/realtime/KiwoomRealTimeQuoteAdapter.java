@@ -82,7 +82,7 @@ public class KiwoomRealTimeQuoteAdapter implements SubscribeRealTimeQuotePort, D
   private void closeExistingConnection() {
     if (webSocketClient != null) {
       try {
-        webSocketClient.close();
+        webSocketClient.shutdown();
       } catch (Exception e) {
         log.warn("이전 WebSocket 연결 종료 중 오류 발생", e);
       }
@@ -311,7 +311,7 @@ public class KiwoomRealTimeQuoteAdapter implements SubscribeRealTimeQuotePort, D
     try {
       if (webSocketClient != null) {
         unsubscribeAllStockQuotes();
-        webSocketClient.close();
+        webSocketClient.shutdown();
         log.info("WebSocket 연결 종료 완료");
       }
     } catch (Exception e) {

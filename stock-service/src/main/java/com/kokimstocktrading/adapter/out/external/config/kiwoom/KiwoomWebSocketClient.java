@@ -8,6 +8,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +32,11 @@ public class KiwoomWebSocketClient extends WebSocketClient {
   private final Map<String, List<String>> subscribedGroups = new ConcurrentHashMap<>();
   private int currentGroupNo = 1;  // 그룹 번호 시작값
 
+  // Heartbeat 관리
+  private final ScheduledExecutorService heartbeatScheduler = Executors.newSingleThreadScheduledExecutor();
+  private ScheduledFuture<?> heartbeatFuture;
+  private static final long HEARTBEAT_INTERVAL = 30; // 30초마다 ping 전송
+
   public KiwoomWebSocketClient(URI serverUri, String accessToken) {
     super(serverUri);
     this.accessToken = accessToken;
@@ -38,6 +46,7 @@ public class KiwoomWebSocketClient extends WebSocketClient {
   public void onOpen(ServerHandshake handshake) {
     log.info("WebSocket 연결됨");
     sendLoginMessage();
+    startHeartbeat();
   }
 
   @Override
@@ -83,6 +92,7 @@ public class KiwoomWebSocketClient extends WebSocketClient {
   public void onClose(int code, String reason, boolean remote) {
     log.info("WebSocket 연결 종료: 코드={}, 이유={}, 원격={}", code, reason, remote);
     isConnected = false;
+    stopHeartbeat();
   }
 
   @Override
@@ -209,5 +219,56 @@ public class KiwoomWebSocketClient extends WebSocketClient {
    */
   public boolean isConnected() {
     return isConnected && isOpen();
+  }
+
+  /**
+   * Heartbeat 시작
+   */
+  private void startHeartbeat() {
+    if (heartbeatFuture != null && !heartbeatFuture.isCancelled()) {
+      heartbeatFuture.cancel(false);
+    }
+
+    heartbeatFuture = heartbeatScheduler.scheduleAtFixedRate(() -> {
+      try {
+        if (isOpen()) {
+          JsonObject pingMessage = new JsonObject();
+          pingMessage.addProperty("trnm", "PING");
+          send(gson.toJson(pingMessage));
+          log.debug("Heartbeat PING 전송");
+        }
+      } catch (Exception e) {
+        log.error("Heartbeat 전송 중 오류: {}", e.getMessage(), e);
+      }
+    }, HEARTBEAT_INTERVAL, HEARTBEAT_INTERVAL, TimeUnit.SECONDS);
+
+    log.info("Heartbeat 시작 ({}초 간격)", HEARTBEAT_INTERVAL);
+  }
+
+  /**
+   * Heartbeat 중단
+   */
+  private void stopHeartbeat() {
+    if (heartbeatFuture != null && !heartbeatFuture.isCancelled()) {
+      heartbeatFuture.cancel(false);
+      log.info("Heartbeat 중단");
+    }
+  }
+
+  /**
+   * 리소스 정리 (WebSocket 종료 시 호출)
+   */
+  public void shutdown() {
+    stopHeartbeat();
+    heartbeatScheduler.shutdown();
+    try {
+      if (!heartbeatScheduler.awaitTermination(5, TimeUnit.SECONDS)) {
+        heartbeatScheduler.shutdownNow();
+      }
+    } catch (InterruptedException e) {
+      heartbeatScheduler.shutdownNow();
+      Thread.currentThread().interrupt();
+    }
+    close();
   }
 }
