@@ -131,15 +131,10 @@ spring:
     enabled: false
 
 springdoc:
-  swagger-ui:
-    path: /swagger-ui.html
-    tags-sorter: alpha
-    operations-sorter: alpha
   api-docs:
-    path: /v3/api-docs
-  packages-to-scan: com.kokimstocktrading.adapter.in.web
-  default-consumes-media-type: application/json
-  default-produces-media-type: application/json
+    enabled: false
+  swagger-ui:
+    enabled: false
 
 kiwoom:
   api:
