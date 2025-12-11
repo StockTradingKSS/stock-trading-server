@@ -24,7 +24,6 @@ public class WebConfig implements WebMvcConfigurer {
 
   @Override
   public void addResourceHandlers(ResourceHandlerRegistry registry) {
-    registry.addResourceHandler("/**")
-        .addResourceLocations("classpath:/static/");
+    // static 리소스 직접 접근 차단 - controller를 통해서만 접근 가능
   }
 }

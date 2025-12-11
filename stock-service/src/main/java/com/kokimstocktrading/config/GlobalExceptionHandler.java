@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 /**
@@ -24,6 +25,13 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(NoResourceFoundException.class)
   public ResponseEntity<ErrorResponse> handleNoResourceFoundException(NoResourceFoundException ex) {
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+  }
+
+  @ExceptionHandler(NoHandlerFoundException.class)
+  public ResponseEntity<ErrorResponse> handleNoHandlerFoundException(NoHandlerFoundException ex) {
+    log.warn("요청한 엔드포인트를 찾을 수 없음: {} {}", ex.getHttpMethod(), ex.getRequestURL());
+    ErrorResponse error = new ErrorResponse("Not Found", "요청한 리소스를 찾을 수 없습니다.");
+    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
   }
 
   @ExceptionHandler(Exception.class)
