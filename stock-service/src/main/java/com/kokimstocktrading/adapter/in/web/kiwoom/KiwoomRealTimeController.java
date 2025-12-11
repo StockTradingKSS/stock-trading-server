@@ -2,6 +2,7 @@ package com.kokimstocktrading.adapter.in.web.kiwoom;
 
 import com.common.WebAdapter;
 import com.kokimstocktrading.application.realtime.out.SubscribeRealTimeQuotePort;
+import com.kokimstocktrading.config.SseConnectionManager;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -28,6 +29,7 @@ import reactor.core.publisher.Flux;
 public class KiwoomRealTimeController {
 
   private final SubscribeRealTimeQuotePort subscribeRealTimeQuotePort;
+  private final SseConnectionManager sseConnectionManager;
 
   @GetMapping(value = "/quote", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
   @Operation(summary = "실시간 주식 시세 조회", description = "지정한 종목들의 실시간 시세를 Server-Sent Events로 제공합니다.")
@@ -50,7 +52,11 @@ public class KiwoomRealTimeController {
         .mergeWith(Flux.interval(Duration.ofSeconds(30))
             .map(i -> ServerSentEvent.<RealTimeQuoteResponse>builder()
                 .event("heartbeat")
-                .build()));
+                .build()))
+        // Graceful shutdown 시 SSE 연결 강제 종료
+        .takeUntilOther(sseConnectionManager.getShutdownSignal())
+        .doOnComplete(() -> log.info("실시간 시세 구독 종료: {}", stockCodeList))
+        .doOnCancel(() -> log.info("실시간 시세 구독 취소: {}", stockCodeList));
   }
 
   @DeleteMapping("/quote")

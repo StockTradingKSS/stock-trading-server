@@ -1,6 +1,7 @@
 package com.kokimstocktrading.adapter.in.web.kiwoom;
 
 import com.common.WebAdapter;
+import com.kokimstocktrading.config.SseConnectionManager;
 import com.kokimstocktrading.domain.realtime.RealTimeQuote;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -13,6 +14,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
@@ -26,8 +28,11 @@ import reactor.core.publisher.Sinks;
 @RestController
 @RequestMapping("/api/mock")
 @Tag(name = "Mock Data API", description = "테스트용 목 데이터 API")
+@RequiredArgsConstructor
 @Slf4j
 public class MockRealTimeController {
+
+  private final SseConnectionManager sseConnectionManager;
 
   private static final Map<String, StockMockData> STOCK_MOCKS = new ConcurrentHashMap<>();
   private static final String[] STOCK_CODES = {"005930", "035720", "000660", "373220", "207940"};
@@ -83,7 +88,11 @@ public class MockRealTimeController {
         .mergeWith(Flux.interval(Duration.ofSeconds(30))
             .map(i -> ServerSentEvent.<RealTimeQuoteResponse>builder()
                 .event("heartbeat")
-                .build()));
+                .build()))
+        // Graceful shutdown 시 SSE 연결 강제 종료
+        .takeUntilOther(sseConnectionManager.getShutdownSignal())
+        .doOnComplete(() -> log.info("Mock 실시간 시세 구독 종료"))
+        .doOnCancel(() -> log.info("Mock 실시간 시세 구독 취소"));
   }
 
   private synchronized void startGeneratingMockData() {
