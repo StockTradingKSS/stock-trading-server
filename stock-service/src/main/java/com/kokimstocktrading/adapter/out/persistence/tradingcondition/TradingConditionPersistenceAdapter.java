@@ -69,7 +69,8 @@ public class TradingConditionPersistenceAdapter implements SaveTradingConditionP
       TrendLineConditionEntity entity = TrendLineConditionEntity.create(
           condition.getId(),
           condition.getStockCode(),
-          condition.getToDate(),
+          condition.getBaseDate(),
+          condition.getBasePrice(),
           condition.getSlope(),
           condition.getInterval(),
           condition.getTouchDirection(),

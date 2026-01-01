@@ -16,7 +16,8 @@ public class TrendLineCondition implements Condition {
 
   private final UUID id;
   private final String stockCode;
-  private final LocalDateTime toDate;        // 추세선 끝점 날짜
+  private final LocalDateTime baseDate;        // 추세선 끝점 날짜
+  private final Long basePrice;        // 추세선 끝점 날짜
   private final BigDecimal slope;            // 추세선 기울기
   private final CandleInterval interval;     // 캔들 간격 (분, 일, 주, 월, 년)
   private final TouchDirection touchDirection;     // 캔들 간격 (분, 일, 주, 월, 년)
@@ -31,34 +32,22 @@ public class TrendLineCondition implements Condition {
   @Setter
   private ConditionStatus status;
 
-  public TrendLineCondition(String stockCode, LocalDateTime toDate, BigDecimal slope,
-      CandleInterval interval, Runnable callback, TouchDirection touchDirection) {
-    this(UUID.randomUUID(), stockCode, toDate, slope, interval, touchDirection, callback, null,
-        ConditionStatus.START);
-  }
-
-  public TrendLineCondition(String stockCode, LocalDateTime toDate, BigDecimal slope,
+  public TrendLineCondition(String stockCode, LocalDateTime baseDate, Long basePrice, BigDecimal slope,
       CandleInterval interval, TouchDirection touchDirection, Runnable callback,
       String description) {
-    this(UUID.randomUUID(), stockCode, toDate, slope, interval, touchDirection, callback,
+    this(UUID.randomUUID(), stockCode, baseDate, basePrice, slope, interval, touchDirection, callback,
         description, ConditionStatus.START);
   }
 
-  public TrendLineCondition(UUID id, String stockCode, LocalDateTime toDate, BigDecimal slope,
-      CandleInterval interval, TouchDirection touchDirection, Runnable callback,
-      String description) {
-    this(id, stockCode, toDate, slope, interval, touchDirection, callback, description,
-        ConditionStatus.START);
-  }
-
-  public TrendLineCondition(UUID id, String stockCode, LocalDateTime toDate, BigDecimal slope,
+  public TrendLineCondition(UUID id, String stockCode, LocalDateTime baseDate, Long basePrice, BigDecimal slope,
       CandleInterval interval, TouchDirection touchDirection, Runnable callback,
       String description, ConditionStatus status) {
+    this.basePrice = basePrice;
     this.touchDirection = touchDirection;
     if (stockCode == null || stockCode.trim().isEmpty()) {
       throw new IllegalArgumentException("종목코드는 필수입니다");
     }
-    if (toDate == null) {
+    if (baseDate == null) {
       throw new IllegalArgumentException("추세선 끝점 날짜는 필수입니다");
     }
     if (slope == null) {
@@ -73,7 +62,7 @@ public class TrendLineCondition implements Condition {
 
     this.id = id;
     this.stockCode = stockCode;
-    this.toDate = toDate;
+    this.baseDate = baseDate;
     this.slope = slope;
     this.interval = interval;
     this.callback = callback;
@@ -120,8 +109,8 @@ public class TrendLineCondition implements Condition {
   @Override
   public String toString() {
     return String.format(
-        "TrendLineCondition{id=%s, stockCode='%s', toDate=%s, slope=%.2f, interval=%s, description='%s'}",
-        id, stockCode, toDate, slope, interval, description);
+        "TrendLineCondition{id=%s, stockCode='%s', baseDate=%s, slope=%.2f, interval=%s, description='%s'}",
+        id, stockCode, baseDate, slope, interval, description);
   }
 
   public void success() {

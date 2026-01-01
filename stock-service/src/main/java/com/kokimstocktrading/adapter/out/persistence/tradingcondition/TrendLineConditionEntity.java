@@ -9,7 +9,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
-import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -24,11 +23,7 @@ import org.hibernate.annotations.UpdateTimestamp;
  * 추세선 조건 엔티티 추세선 기반 거래 조건을 저장
  */
 @Entity
-@Table(name = "trend_line_conditions", indexes = {
-    @Index(name = "idx_tl_stock_code", columnList = "stock_code"),
-    @Index(name = "idx_tl_status", columnList = "status"),
-    @Index(name = "idx_tl_stock_code_status", columnList = "stock_code, status")
-})
+@Table(name = "trend_line_conditions")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class TrendLineConditionEntity {
@@ -47,10 +42,16 @@ public class TrendLineConditionEntity {
   private String stockCode;
 
   /**
-   * 추세선 끝점 날짜
+   * 추세선 기준 날짜
    */
-  @Column(name = "to_date", nullable = false)
-  private LocalDateTime toDate;
+  @Column(name = "base_date", nullable = false)
+  private LocalDateTime baseDate;
+
+  /**
+   * 추세선 기준 날짜의 가격
+   */
+  @Column(name = "base_price", nullable = false)
+  private Long basePrice;
 
   /**
    * 추세선 기울기
@@ -105,7 +106,8 @@ public class TrendLineConditionEntity {
   public static TrendLineConditionEntity create(
       UUID id,
       String stockCode,
-      LocalDateTime toDate,
+      LocalDateTime baseDate,
+      Long basePrice,
       BigDecimal slope,
       CandleInterval interval,
       TouchDirection touchDirection,
@@ -115,7 +117,8 @@ public class TrendLineConditionEntity {
     TrendLineConditionEntity entity = new TrendLineConditionEntity();
     entity.id = id;
     entity.stockCode = stockCode;
-    entity.toDate = toDate;
+    entity.baseDate = baseDate;
+    entity.basePrice = basePrice;
     entity.slope = slope;
     entity.interval = interval;
     entity.touchDirection = touchDirection;
@@ -148,12 +151,14 @@ public class TrendLineConditionEntity {
     return new TrendLineCondition(
         this.id,
         this.stockCode,
-        this.toDate,
+        this.baseDate,
+        this.basePrice,
         this.slope,
         this.interval,
         this.touchDirection,
         callback,
-        this.description
+        this.description,
+        this.status
     );
   }
 }

@@ -23,11 +23,7 @@ import org.hibernate.annotations.UpdateTimestamp;
  * 이평선 조건 엔티티 이동평균선 기반 거래 조건을 저장
  */
 @Entity
-@Table(name = "moving_average_conditions", indexes = {
-    @Index(name = "idx_stock_code", columnList = "stock_code"),
-    @Index(name = "idx_status", columnList = "status"),
-    @Index(name = "idx_stock_code_status", columnList = "stock_code, status")
-})
+@Table(name = "moving_average_conditions")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class MovingAverageConditionEntity {

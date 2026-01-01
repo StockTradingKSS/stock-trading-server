@@ -14,6 +14,7 @@ import com.kokimstocktrading.application.monitoring.dynamiccondition.MovingAvera
 import com.kokimstocktrading.application.monitoring.dynamiccondition.TrendLineDynamicCondition;
 import com.kokimstocktrading.domain.candle.CandleInterval;
 import com.kokimstocktrading.domain.candle.StockCandle;
+import com.kokimstocktrading.domain.monitoring.ConditionStatus;
 import com.kokimstocktrading.domain.monitoring.MovingAverageCondition;
 import com.kokimstocktrading.domain.monitoring.TouchDirection;
 import com.kokimstocktrading.domain.monitoring.TrendLineCondition;
@@ -301,7 +302,7 @@ class DynamicConditionServiceTest {
   public void canRegisterTrendLineCondition() {
     //given
     String stockCode = "005930";
-    LocalDateTime toDate = LocalDateTime.of(2024, 1, 1, 0, 0);
+    LocalDateTime baseDate = LocalDateTime.of(2024, 1, 1, 0, 0);
     BigDecimal slope = BigDecimal.valueOf(100);
     CandleInterval interval = CandleInterval.DAY;
     AtomicBoolean triggered = new AtomicBoolean(false);
@@ -316,7 +317,7 @@ class DynamicConditionServiceTest {
     );
 
     when(loadStockCandlePort.loadStockCandleListBy(eq(stockCode), eq(interval),
-        any(LocalDateTime.class), eq(toDate)))
+        any(LocalDateTime.class), eq(baseDate)))
         .thenReturn(Mono.just(mockCandles));
 
     // Mock PriceCondition 등록
@@ -325,8 +326,8 @@ class DynamicConditionServiceTest {
 
     //when
     TrendLineCondition condition = new TrendLineCondition(
-        UUID.randomUUID(), stockCode, toDate, slope, interval, TouchDirection.FROM_ABOVE,
-        () -> triggered.compareAndSet(false, true), null);
+        UUID.randomUUID(), stockCode, baseDate, 10000L, slope, interval, TouchDirection.FROM_ABOVE,
+        () -> triggered.compareAndSet(false, true), "description", ConditionStatus.START);
     TrendLineCondition registeredCondition = dynamicConditionService
         .registerTrendLineCondition(condition)
         .block();
@@ -334,7 +335,7 @@ class DynamicConditionServiceTest {
     //then
     assertThat(registeredCondition).isNotNull();
     assertThat(registeredCondition.getStockCode()).isEqualTo(stockCode);
-    assertThat(registeredCondition.getToDate()).isEqualTo(toDate);
+    assertThat(registeredCondition.getBaseDate()).isEqualTo(baseDate);
     assertThat(registeredCondition.getSlope()).isEqualTo(slope);
     assertThat(registeredCondition.getInterval()).isEqualTo(interval);
     assertThat(registeredCondition.getCurrentPriceConditionId()).isNotNull();
@@ -346,27 +347,28 @@ class DynamicConditionServiceTest {
   public void trendLineTouchPriceCalculationIsAccurate() {
     //given
     String stockCode = "005930";
-    LocalDateTime toDate = LocalDateTime.of(2024, 1, 1, 0, 0);
+    LocalDateTime baseDate = LocalDateTime.of(2024, 1, 1, 0, 0);
+    Long basePrice = 50000L;
     BigDecimal slope = BigDecimal.valueOf(100); // 봉당 100원씩 상승
     CandleInterval interval = CandleInterval.DAY;
 
-    // 5개 캔들 = 4개 간격, 시작가 50000원 (첫 번째 캔들)
-    // 현재가격 = 50000 + (4 * 100) = 50400원
+    // 5개 캔들 = 4개 간격, 시작기준가격 50000원
+    // 현재 추세선의 가격 = 50000 + (4 * 100) = 50400원
     List<StockCandle> mockCandles = List.of(
-        createMockCandle(BigDecimal.valueOf(50000)), // 시작점 (첫 번째 캔들)
+        createMockCandle(BigDecimal.valueOf(51000)),
         createMockCandle(BigDecimal.valueOf(50500)),
         createMockCandle(BigDecimal.valueOf(51000)),
         createMockCandle(BigDecimal.valueOf(51500)),
-        createMockCandle(BigDecimal.valueOf(52000))  // 마지막
+        createMockCandle(BigDecimal.valueOf(52000))
     );
 
     when(loadStockCandlePort.loadStockCandleListBy(eq(stockCode), eq(interval),
-        any(LocalDateTime.class), eq(toDate)))
+        any(LocalDateTime.class), eq(baseDate)))
         .thenReturn(Mono.just(mockCandles));
 
     //when
     Long trendLinePrice = trendLineTouchPriceCalculator
-        .calculateTargetPrice(stockCode, toDate, slope, interval)
+        .calculateTargetPrice(stockCode, baseDate, basePrice, slope, interval)
         .block();
 
     //then
@@ -379,7 +381,7 @@ class DynamicConditionServiceTest {
   public void trendLineConditionUpdatedAtEveryMinute() {
     //given
     String stockCode = "005930";
-    LocalDateTime toDate = LocalDateTime.of(2024, 1, 1, 0, 0);
+    LocalDateTime baseDate = LocalDateTime.of(2024, 1, 1, 0, 0);
     BigDecimal slope = BigDecimal.valueOf(100);
     CandleInterval interval = CandleInterval.MINUTE;
     AtomicInteger updateCount = new AtomicInteger(0);
@@ -404,7 +406,7 @@ class DynamicConditionServiceTest {
     );
 
     when(loadStockCandlePort.loadStockCandleListBy(eq(stockCode), eq(interval),
-        any(LocalDateTime.class), eq(toDate)))
+        any(LocalDateTime.class), eq(baseDate)))
         .thenReturn(Mono.just(initialCandles))
         .thenReturn(Mono.just(updatedCandles))
         .thenReturn(Mono.just(updatedCandles)); // 추가 호출을 위해
@@ -429,9 +431,9 @@ class DynamicConditionServiceTest {
 
     //when
     TrendLineCondition condition = new TrendLineCondition(
-        UUID.randomUUID(), stockCode, toDate, slope, interval, TouchDirection.FROM_ABOVE,
+        UUID.randomUUID(), stockCode, baseDate, 10000L, slope, interval, TouchDirection.FROM_ABOVE,
         () -> {
-        }, null);
+        }, "description", ConditionStatus.START);
     TrendLineCondition registeredCondition = dynamicConditionService
         .registerTrendLineCondition(condition)
         .block();
@@ -461,7 +463,7 @@ class DynamicConditionServiceTest {
   public void canRemoveTrendLineCondition() {
     //given
     String stockCode = "005930";
-    LocalDateTime toDate = LocalDateTime.of(2024, 1, 1, 0, 0);
+    LocalDateTime baseDate = LocalDateTime.of(2024, 1, 1, 0, 0);
     BigDecimal slope = BigDecimal.valueOf(100);
     CandleInterval interval = CandleInterval.DAY;
 
@@ -474,16 +476,16 @@ class DynamicConditionServiceTest {
     );
 
     when(loadStockCandlePort.loadStockCandleListBy(eq(stockCode), eq(interval),
-        any(LocalDateTime.class), eq(toDate)))
+        any(LocalDateTime.class), eq(baseDate)))
         .thenReturn(Mono.just(mockCandles));
     when(monitorPriceService.registerPriceCondition(any()))
         .thenAnswer(invocation -> invocation.getArgument(0));
     when(monitorPriceService.removePriceCondition(any())).thenReturn(true);
 
     TrendLineCondition condition = new TrendLineCondition(
-        UUID.randomUUID(), stockCode, toDate, slope, interval, TouchDirection.FROM_ABOVE,
+        UUID.randomUUID(), stockCode, baseDate, 10000L, slope, interval, TouchDirection.FROM_ABOVE,
         () -> {
-        }, null);
+        }, "description", ConditionStatus.START);
     TrendLineCondition registeredCondition = dynamicConditionService
         .registerTrendLineCondition(condition)
         .block();
@@ -519,13 +521,13 @@ class DynamicConditionServiceTest {
 
     // 여러 추세선 조건 등록
     TrendLineCondition trendCondition1 = new TrendLineCondition(
-        UUID.randomUUID(), "005930", LocalDateTime.of(2024, 1, 1, 0, 0),
+        UUID.randomUUID(), "005930", LocalDateTime.of(2024, 1, 1, 0, 0), 10000L,
         BigDecimal.valueOf(100), CandleInterval.DAY, TouchDirection.FROM_ABOVE, () -> {
-    }, null);
+    }, "description", ConditionStatus.START);
     TrendLineCondition trendCondition2 = new TrendLineCondition(
-        UUID.randomUUID(), "000660", LocalDateTime.of(2024, 2, 1, 0, 0),
+        UUID.randomUUID(), "000660", LocalDateTime.of(2024, 2, 1, 0, 0), 10000L,
         BigDecimal.valueOf(50), CandleInterval.MINUTE, TouchDirection.FROM_ABOVE, () -> {
-    }, null);
+    }, "description", ConditionStatus.START);
     dynamicConditionService.registerTrendLineCondition(trendCondition1).block();
     dynamicConditionService.registerTrendLineCondition(trendCondition2).block();
 
@@ -570,9 +572,9 @@ class DynamicConditionServiceTest {
 
     // 추세선 조건 등록
     TrendLineCondition tlCondition = new TrendLineCondition(
-        UUID.randomUUID(), "000660", LocalDateTime.of(2024, 1, 1, 0, 0),
+        UUID.randomUUID(), "000660", LocalDateTime.of(2024, 1, 1, 0, 0), 10000L,
         BigDecimal.valueOf(100), CandleInterval.DAY, TouchDirection.FROM_ABOVE, () -> {
-    }, null);
+    }, "description", ConditionStatus.START);
     dynamicConditionService.registerTrendLineCondition(tlCondition).block();
 
     assertThat(dynamicConditionService.getMovingAverageConditionCount()).isEqualTo(1);

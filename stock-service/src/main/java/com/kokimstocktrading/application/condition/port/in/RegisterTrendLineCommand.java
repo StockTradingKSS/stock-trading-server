@@ -10,7 +10,8 @@ import java.time.LocalDateTime;
  */
 public record RegisterTrendLineCommand(
     String stockCode,
-    LocalDateTime toDate,
+    LocalDateTime baseDate,
+    Long basePrice,
     BigDecimal slope,
     TouchDirection touchDirection,
     CandleInterval interval,
@@ -21,8 +22,11 @@ public record RegisterTrendLineCommand(
     if (stockCode == null || stockCode.trim().isEmpty()) {
       throw new IllegalArgumentException("종목코드는 필수입니다");
     }
-    if (toDate == null) {
-      throw new IllegalArgumentException("추세선 끝점 날짜는 필수입니다");
+    if (baseDate == null) {
+      throw new IllegalArgumentException("추세선 기준점 날짜는 필수입니다");
+    }
+    if (basePrice == null) {
+      throw new IllegalArgumentException("추세선 기준점 가격은 필수입니다");
     }
     if (slope == null) {
       throw new IllegalArgumentException("추세선 기울기는 필수입니다");

@@ -87,7 +87,7 @@ public class TrendLineDynamicCondition implements DynamicCondition<TrendLineCond
     }
 
     return trendLineTouchPriceCalculator.calculateTargetPrice(
-            condition.getStockCode(), condition.getToDate(), condition.getSlope(),
+            condition.getStockCode(), condition.getBaseDate(), condition.getBasePrice(), condition.getSlope(),
             condition.getInterval())
         .map(targetPrice -> {
           PriceCondition priceCondition = condition.createPriceCondition(targetPrice,
@@ -136,7 +136,7 @@ public class TrendLineDynamicCondition implements DynamicCondition<TrendLineCond
    */
   private Mono<Void> updateCondition(TrendLineCondition condition) {
     return trendLineTouchPriceCalculator.calculateTargetPrice(
-            condition.getStockCode(), condition.getToDate(), condition.getSlope(),
+            condition.getStockCode(), condition.getBaseDate(), condition.getBasePrice(), condition.getSlope(),
             condition.getInterval())
         .flatMap(newTrendLinePrice -> {
           // 기존 PriceCondition 삭제

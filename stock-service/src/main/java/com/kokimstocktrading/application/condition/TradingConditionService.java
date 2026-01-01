@@ -7,6 +7,7 @@ import com.kokimstocktrading.application.condition.port.out.SaveTradingCondition
 import com.kokimstocktrading.application.condition.port.out.TradingTimePort;
 import com.kokimstocktrading.application.monitoring.dynamiccondition.DynamicConditionService;
 import com.kokimstocktrading.application.notification.port.out.SendNotificationPort;
+import com.kokimstocktrading.domain.monitoring.ConditionStatus;
 import com.kokimstocktrading.domain.monitoring.MovingAverageCondition;
 import com.kokimstocktrading.domain.monitoring.TrendLineCondition;
 import java.util.UUID;
@@ -74,12 +75,13 @@ public class TradingConditionService implements RegisterTradingConditionUseCase 
   @Transactional
   public TrendLineCondition registerTrendLineCondition(RegisterTrendLineCommand command) {
     log.info("추세선 조건 등록 요청: 종목={}, 끝점={}, 기울기={}, 간격={}",
-        command.stockCode(), command.toDate(), command.slope(), command.interval());
+        command.stockCode(), command.baseDate(), command.slope(), command.interval());
 
     // 1. 도메인 객체 생성 (callback 포함)
     TrendLineCondition condition = new TrendLineCondition(
         command.stockCode(),
-        command.toDate(),
+        command.baseDate(),
+        command.basePrice(),
         command.slope(),
         command.interval(),
         command.touchDirection(),
@@ -202,7 +204,8 @@ public class TradingConditionService implements RegisterTradingConditionUseCase 
       TrendLineCondition conditionWithCallback = new TrendLineCondition(
           condition.getId(),
           condition.getStockCode(),
-          condition.getToDate(),
+          condition.getBaseDate(),
+          condition.getBasePrice(),
           condition.getSlope(),
           condition.getInterval(),
           condition.getTouchDirection(),

@@ -23,10 +23,10 @@ public class TrendLineTouchPriceCalculator {
 
   private final LoadStockCandlePort loadStockCandlePort;
 
-  public Mono<Long> calculateTargetPrice(String stockCode, LocalDateTime toDate, BigDecimal slope,
+  public Mono<Long> calculateTargetPrice(String stockCode, LocalDateTime baseDate, Long basePrice, BigDecimal slope,
       CandleInterval interval) {
     return loadStockCandlePort.loadStockCandleListBy(stockCode, interval,
-            LocalDateTime.now(), toDate)
+            LocalDateTime.now(), baseDate)
         .<Long>handle((stockCandleList, sink) -> {
           if (stockCandleList.isEmpty()) {
             log.warn("추세선 터치 가격 계산을 위한 충분한 캔들 데이터가 없습니다. 요구: {}, 실제: {}",
@@ -38,11 +38,8 @@ public class TrendLineTouchPriceCalculator {
           // 봉 개수 계산 (현재부터 시작점까지)
           int candleCount = stockCandleList.size() - 1;
 
-          // 추세선 시작점 가격 (가장 과거 봉의 종가)
-          Long startPrice = stockCandleList.getFirst().getClosePrice();
-
           // 현재 시점의 추세선 가격 = 시작가격 + (봉개수 * 기울기)
-          BigDecimal currentTrendLinePrice = BigDecimal.valueOf(startPrice)
+          BigDecimal currentTrendLinePrice = BigDecimal.valueOf(basePrice)
               .add(slope.multiply(BigDecimal.valueOf(candleCount)));
 
           sink.next(currentTrendLinePrice.setScale(0, RoundingMode.HALF_UP).longValue());

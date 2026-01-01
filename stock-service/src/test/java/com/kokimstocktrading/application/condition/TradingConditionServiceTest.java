@@ -17,6 +17,7 @@ import com.kokimstocktrading.application.condition.port.out.TradingTimePort;
 import com.kokimstocktrading.application.monitoring.dynamiccondition.DynamicConditionService;
 import com.kokimstocktrading.application.notification.port.out.SendNotificationPort;
 import com.kokimstocktrading.domain.candle.CandleInterval;
+import com.kokimstocktrading.domain.monitoring.ConditionStatus;
 import com.kokimstocktrading.domain.monitoring.MovingAverageCondition;
 import com.kokimstocktrading.domain.monitoring.TouchDirection;
 import com.kokimstocktrading.domain.monitoring.TrendLineCondition;
@@ -141,6 +142,7 @@ class TradingConditionServiceTest {
     RegisterTrendLineCommand command = new RegisterTrendLineCommand(
         "005930",
         LocalDateTime.now(),
+        10000L,
         new BigDecimal("0.5"),
         TouchDirection.FROM_ABOVE,
         CandleInterval.DAY,
@@ -150,13 +152,15 @@ class TradingConditionServiceTest {
     TrendLineCondition savedCondition = new TrendLineCondition(
         testConditionId,
         command.stockCode(),
-        command.toDate(),
+        command.baseDate(),
+        command.basePrice(),
         command.slope(),
         command.interval(),
         command.touchDirection(),
         () -> {
         },
-        command.description()
+        command.description(),
+        ConditionStatus.START
     );
 
     when(saveTradingConditionPort.saveTrendLineCondition(any(TrendLineCondition.class)))
